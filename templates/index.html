@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AstroMind</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$', right: '$', display: false}]});">
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #0B1319;
+            color: #E8EDF2;
+            line-height: 1.6;
+            background-image: radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.10), transparent),
+                radial-gradient(1px 1px at 80% 40%, rgba(255, 255, 255, 0.08), transparent),
+                radial-gradient(1.5px 1.5px at 30% 70%, rgba(255, 255, 255, 0.12), transparent),
+                radial-gradient(1px 1px at 70% 90%, rgba(255, 255, 255, 0.06), transparent);
+        }
+        body {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1rem;
+            overflow-x: auto;
+            min-width: fit-content;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 20px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
+            flex-shrink: 0;
+            min-width: fit-content;
+        }
+
+        .main-content {
+            flex: 0 0 1000px;
+            width: 1000px;
+            min-width: 0;
+            height: auto;
+            max-height: none;
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+            background: rgba(18, 28, 40, 0.60);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.80);
+            transition: padding 0.3s ease;
+        }
+        .main-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .main-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .main-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        /* ===== 标题居中 ===== */
+        .main-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            margin: 0 0 1.8rem 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+        /* ===== 主标题：加粗、发光、层次感 ===== */
+        .title-icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0px;
+            width: 44px;
+            height: 44px;
+            /* 将原色（假设为黑色）染成 #6A8CFF */
+            filter: brightness(0) saturate(100%) invert(47%) sepia(98%) saturate(1983%) hue-rotate(201deg) brightness(102%) contrast(102%);
+        }
+        .title-text {
+            font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', sans-serif;
+            font-weight: 600;          /* 中等偏粗，不单薄 */
+            font-size: 3.2rem;
+            letter-spacing: 0.04em;    /* 微调字距，更舒展 */
+            color: #FFFFFF;
+            text-shadow: 
+                0 0 30px rgba(106, 140, 255, 0.12),
+                0 0 80px rgba(106, 140, 255, 0.04);
+            position: relative;
+        }
+
+        .astro {
+            font-weight: 300;                /* 轻盈，细体 */
+            letter-spacing: 0.02em;          /* 舒展 */
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .mind {
+            font-weight: 500;                /* 加粗，厚重 */
+            letter-spacing: 0.02em;
+            color: #6A8CFF;                  /* 科技蓝 */
+            text-shadow: 0 0 40px rgba(106, 140, 255, 0.2);
+        }
+
+        /* 底部光痕（更明显） */
+        .title-text::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(106, 140, 255, 0.4) 20%, 
+                rgba(106, 140, 255, 0.6) 50%, 
+                rgba(106, 140, 255, 0.4) 80%, 
+                transparent);
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.2rem 0.8rem 0.2rem 0.6rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .brand-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        .powered-by {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .logo-img {
+            height: 18px;
+            width: auto;
+            vertical-align: middle;
+            filter: brightness(0.8) saturate(1.1);
+            transition: filter 0.2s;
+        }
+        .logo-img:hover {
+            filter: brightness(1.0) saturate(1.2);
+        }
+
+        /* ===== API 设置面板 ===== */
+        .settings-toggle {
+            display: inline-block;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s;
+        }
+        .settings-toggle:hover {
+            color: #6A8CFF;
+        }
+        .settings-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .settings-row label {
+            min-width: 120px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+        .settings-row input {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #E8EDF2;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .settings-row input:focus {
+            border-color: #6A8CFF;
+            outline: none;
+        }
+        .settings-row .hint {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+        }
+        .settings-row .hint a {
+            color: #6A8CFF;
+            text-decoration: none;
+        }
+        .settings-row .hint a:hover {
+            text-decoration: underline;
+        }
+        #saveSettingsBtn {
+            padding: 0.5rem 2rem;
+            background: #6A8CFF;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        #saveSettingsBtn:disabled {
+            background: #4a4a4a;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        #saveSettingsBtn:not(:disabled):hover {
+            background: #8AACFF;
+        }
+        .settings-extra {
+            margin-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 0.8rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .settings-extra button {
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .settings-extra button:hover {
+            background: rgba(255,80,80,0.1);
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+
+        /* ===== 预设关键词 ===== */
+        .preset-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.8rem;
+        }
+        .preset-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 400;
+            margin-right: 0.2rem;
+        }
+        .keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .preset-keyword {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 1.2rem;
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.70);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .preset-keyword:hover {
+            background: rgba(106, 140, 255, 0.15);
+            border-color: #6A8CFF;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+        }
+        .preset-keyword .delete-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s, color 0.2s;
+        }
+        .preset-keyword:hover .delete-btn {
+            opacity: 1;
+        }
+        .preset-keyword .delete-btn:hover {
+            background: rgba(255, 80, 80, 0.8);
+            color: #ffffff;
+        }
+
+        .add-keyword-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.50);
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .add-keyword-btn:hover {
+            background: rgba(106, 140, 255, 0.15);
+            border-color: #6A8CFF;
+            color: #6A8CFF;
+            transform: translateY(-2px);
+        }
+        .add-keyword-input {
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            border: 1px solid rgba(106, 140, 255, 0.4);
+            background: rgba(0, 0, 0, 0.3);
+            color: #E8EDF2;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            outline: none;
+            width: auto;
+            min-width: 100px;
+            transition: border-color 0.2s;
+        }
+        .add-keyword-input:focus {
+            border-color: #6A8CFF;
+        }
+
+        /* ===== 搜索栏 ===== */
+        .search-box {
+            display: flex;
+            gap: 0.8rem;
+            margin: 0 0 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.8rem 1.2rem;
+            background: rgba(0, 0, 0, 0.30);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            font-size: 1rem;
+            color: #E8EDF2;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+        }
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.30);
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #6A8CFF;
+            background: rgba(0, 0, 0, 0.50);
+            box-shadow: 0 0 0 3px rgba(106, 140, 255, 0.15);
+        }
+        .search-box button {
+            padding: 0.8rem 2.2rem;
+            background: linear-gradient(145deg, #1E3A6F, #2A5C9A);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.25s, transform 0.15s, box-shadow 0.25s;
+            box-shadow: 0 4px 16px rgba(42, 92, 154, 0.30);
+        }
+        .search-box button:hover:not(:disabled) {
+            background: linear-gradient(145deg, #2A5C9A, #3A7CCF);
+            box-shadow: 0 8px 28px rgba(42, 92, 154, 0.50);
+            transform: translateY(-2px);
+        }
+        .search-box button:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+        .search-box button:disabled {
+            opacity: 0.40;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .search-box .update-btn {
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: #B0C4DE;
+        }
+        .search-box .update-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #6A8CFF;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+        }
+        .search-box .update-btn.stop {
+            background: rgba(255, 80, 80, 0.15);
+            border-color: rgba(255, 80, 80, 0.3);
+            color: #FF6B6B;
+        }
+        .search-box .update-btn.stop:hover:not(:disabled) {
+            background: rgba(255, 80, 80, 0.25);
+            border-color: #FF6B6B;
+            color: #FFFFFF;
+        }
+
+        /* ===== 右侧面板 ===== */
+        .side-panel {
+            position: sticky;
+            top: 1rem;
+            flex-shrink: 0;
+            flex-grow: 0;
+            width: 0;
+            overflow: hidden;
+            background: rgba(22, 27, 34, 0.98);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.80);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            align-self: flex-start;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.35s ease 0.05s,
+                transform 0.40s ease 0.05s;
+        }
+        .side-panel.open {
+            width: 520px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .side-panel-wrapper {
+            width: 520px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .panel-header {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 0.8rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(22, 27, 34, 0.98);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            border-radius: 24px 24px 0 0;
+        }
+        .panel-header .panel-title {
+            margin: 0;
+            font-weight: 400;
+            font-size: 1.6rem;
+            color: #E8EDF2;
+            border: none;
+            padding: 0;
+        }
+        .panel-header .close-btn {
+            background: none;
+            border: none;
+            color: #8A9BB0;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 0 0 0 1rem;
+        }
+        .panel-header .close-btn:hover {
+            color: #E8EDF2;
+        }
+        .side-panel .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+            white-space: pre-wrap;
+            text-align: left;
+            word-break: break-word;
+            color: #E8EDF2;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+        .side-panel .content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .side-panel .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .side-panel .content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        .side-panel .content strong {
+            color: #6A8CFF;
+        }
+        .side-panel .content a {
+            color: #6A8CFF;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(106, 140, 255, 0.3);
+        }
+        .side-panel .content a:hover {
+            color: #8AACFF;
+            border-bottom-color: #8AACFF;
+        }
+        .side-panel .loading-text {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        /* ===== 综述卡片 ===== */
+        .overview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin-bottom: 2.5rem;
+        }
+        .overview-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 1.5rem 1.8rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .overview-card:hover {
+            background: rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        .overview-card .title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #6A8CFF;
+            margin-bottom: 0.5rem;
+        }
+        .overview-card .content {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #E8EDF2;
+            white-space: normal;
+            text-align: justify;
+            word-break: break-word;
+        }
+        .overview-card .content a {
+            color: #6A8CFF;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(106, 140, 255, 0.3);
+        }
+        .overview-card .content a:hover {
+            color: #8AACFF;
+            border-bottom-color: #8AACFF;
+        }
+        .overview-card .actions {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .expand-btn {
+            background: rgba(106, 140, 255, 0.15);
+            border: 1px solid rgba(106, 140, 255, 0.20);
+            color: #6A8CFF;
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+        .expand-btn:hover {
+            background: rgba(106, 140, 255, 0.25);
+            border-color: #6A8CFF;
+        }
+        .expand-btn.active {
+            background: #6A8CFF !important;
+            color: #FFFFFF !important;
+            border-color: #6A8CFF !important;
+            box-shadow: 0 0 20px rgba(106, 140, 255, 0.4);
+        }
+
+        /* ===== 分类卡片 ===== */
+        .category-card {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            margin-bottom: 0.8rem;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.20);
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .category-card:hover {
+            border-color: rgba(106, 140, 255, 0.20);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.40);
+        }
+        .category-header {
+            padding: 0.9rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid transparent;
+            color: #FFFFFF;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .category-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .category-header .arrow {
+            transition: transform 0.35s ease;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.30);
+        }
+        .category-header .arrow.open {
+            transform: rotate(180deg);
+        }
+        .category-body {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 1.5rem;
+            transform: translateY(-8px);
+            transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.35s ease,
+                padding 0.3s ease,
+                transform 0.35s ease;
+        }
+        .category-body.open {
+            max-height: 2000px;
+            opacity: 1;
+            padding: 0.5rem 1.5rem 1.5rem;
+            transform: translateY(0);
+        }
+        .paper-link {
+            display: block;
+            padding: 0.6rem 0.8rem;
+            margin: 0.15rem 0;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            color: #D0D8E0;
+            text-decoration: none;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+            transform: translateX(0);
+        }
+        .paper-link:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.06);
+            color: #FFFFFF;
+            transform: translateX(6px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.30);
+        }
+        .paper-link .meta {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.35);
+            display: block;
+            margin-top: 0.1rem;
+            letter-spacing: 0.04em;
+        }
+        .paper-link .no-link {
+            color: rgba(255, 255, 255, 0.20);
+        }
+
+        .status {
+            color: rgba(255, 255, 255, 0.50);
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            font-family: inherit;
+            min-height: 1.6rem;
+            transition: color 0.3s;
+        }
+        .status.error {
+            color: #FF6B6B;
+        }
+        .status.success {
+            color: #4CAF50;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .loader {
+            border: 2px solid rgba(255, 255, 255, 0.10);
+            border-top-color: #6A8CFF;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .error {
+            color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.08);
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            border-left: 3px solid #FF6B6B;
+        }
+        .footer {
+            font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', sans-serif;
+            font-weight: 300;                 /* 细体，轻盈感 */
+            font-size: 0.85rem;               /* 比标准稍大一点，更有存在感 */
+            letter-spacing: 0.04em;
+            color: rgba(255, 255, 255, 0.3);  /* 淡色，不抢镜 */
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            transition: color 0.3s;
+        }
+
+        /* ===== 引导样式 ===== */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+        .tutorial-card {
+            max-width: 600px;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            text-align: left;
+            animation: fadeUp 0.4s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tutorial-card h2 {
+            font-weight: 300;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: #E8EDF2;
+        }
+        .tutorial-card p {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+        .tutorial-step {
+            display: none;
+        }
+        .tutorial-step.active {
+            display: block;
+        }
+        .tutorial-step .step-num {
+            display: inline-block;
+            background: #6A8CFF;
+            color: #fff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 600;
+            margin-right: 0.8rem;
+        }
+        .tutorial-step ul {
+            margin: 1rem 0 0 1.5rem;
+            color: rgba(255,255,255,0.6);
+        }
+        .tutorial-step ul li {
+            margin-bottom: 0.5rem;
+        }
+        .tutorial-actions {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        .tutorial-actions button {
+            padding: 0.6rem 1.8rem;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .tutorial-actions .btn-primary {
+            background: #6A8CFF;
+            color: #fff;
+        }
+        .tutorial-actions .btn-primary:hover {
+            background: #8AACFF;
+            transform: scale(1.02);
+        }
+        .tutorial-actions .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .tutorial-actions .btn-secondary:hover {
+            background: rgba(255,255,255,0.12);
+        }
+        .tutorial-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .tutorial-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s;
+        }
+        .tutorial-dots span.active {
+            background: #6A8CFF;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 640px) {
+            .container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+                flex-shrink: 0;
+            }
+            .main-content {
+                flex: 1;
+                width: 100%;
+                height: auto;
+                max-height: 60vh;
+                overflow-y: auto;
+                padding: 1.2rem;
+            }
+            .side-panel {
+                position: static;
+                flex: 0 0 auto;
+                width: 0;
+                height: 60vh;
+                max-height: 60vh;
+                overflow: hidden;
+                border-radius: 24px;
+                transform: translateY(20px);
+                opacity: 0;
+                transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.35s ease 0.05s,
+                    transform 0.40s ease 0.05s;
+            }
+            .side-panel.open {
+                width: 100%;
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .side-panel-wrapper {
+                width: 100%;
+            }
+            .panel-header {
+                padding: 1rem 1rem 0.6rem 1rem;
+                border-radius: 24px 24px 0 0;
+            }
+            .side-panel .content {
+                padding: 0.3rem 1rem 1rem 1rem;
+            }
+            .title-text {
+                font-size: 1.8rem;
+            }
+            .brand-box {
+                padding: 0.1rem 0.6rem 0.1rem 0.4rem;
+                gap: 0.3rem;
+            }
+            .logo-img {
+                height: 14px;
+            }
+            .powered-by {
+                font-size: 0.5rem;
+            }
+            .search-box {
+                flex-wrap: wrap;
+            }
+            .search-box button {
+                width: 100%;
+                justify-content: center;
+            }
+            .search-box .update-btn {
+                width: 100%;
+            }
+            .preset-keywords {
+                gap: 0.4rem;
+            }
+            .preset-keyword {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .overview-card {
+                padding: 1rem 1.2rem;
+            }
+            .tutorial-card {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <div class="main-content" id="mainContent">
+            <!-- 标题 -->
+            <h1 class="main-title">
+                <img src="{{ url_for('static', filename='galaxy-2-solid.svg') }}" alt="图标" class="title-icon">
+                <span class="title-text">
+                    <span class="astro">Astro</span><span class="mind">Mind</span>
+                </span>
+                <div class="brand-box">
+                    <span class="powered-by">powered by</span>
+                    <img src="{{ url_for('static', filename='ads_logo.svg') }}" alt="SciX" class="logo-img">
+                    <img src="{{ url_for('static', filename='deepseek-color.svg') }}" alt="DeepSeek" class="logo-img">
+                </div>
+            </h1>
+
+            <!-- API 设置 -->
+            <div class="settings-toggle" id="settingsToggle">⚙️ API 设置</div>
+            <div class="settings-panel" id="settingsPanel" style="display:none;">
+                <div class="settings-row">
+                    <label for="adsToken">ADS Token</label>
+                    <input type="text" id="adsToken" placeholder="输入你的 ADS 令牌" />
+                    <span class="hint">从 <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">这里获取</a></span>
+                </div>
+                <div class="settings-row">
+                    <label for="deepseekKey">DeepSeek API Key</label>
+                    <input type="password" id="deepseekKey" placeholder="输入你的 DeepSeek API Key" />
+                    <span class="hint">从 <a href="https://platform.deepseek.com/api_keys" target="_blank">这里获取</a></span>
+                </div>
+                <button id="saveSettingsBtn" disabled>保存设置</button>
+                <div class="settings-extra">
+                    <button id="clearCacheBtn">🧹 清除所有缓存</button>
+                </div>
+            </div>
+
+            <!-- 常用搜索（动态） -->
+            <div class="preset-keywords" id="presetContainer">
+                <span class="preset-label">常用搜索：</span>
+                <div id="keywordList" class="keyword-list"></div>
+                <button class="add-keyword-btn" id="addKeywordBtn">＋</button>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-box">
+                <input type="text" id="keyword" placeholder="输入关键词，如 hubble tension" />
+                <button id="searchBtn">搜索</button>
+                <button id="updateBtn" class="update-btn" title="强制更新当前关键词的综述">🔄 更新</button>
+            </div>
+
+            <div id="status" class="status">✦ 输入关键词或点击常用搜索开始探索</div>
+            <div id="results"></div>
+            <div class="footer">懒人不想走路，于是发明了轮子</div>
+        </div>
+
+        <!-- 右侧面板 -->
+        <div id="sidePanel" class="side-panel">
+            <div class="side-panel-wrapper">
+                <div class="panel-header">
+                    <h2 class="panel-title">📘 详情</h2>
+                    <button class="close-btn" onclick="closeSidePanel()">✕</button>
+                </div>
+                <div id="panelContent" class="content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 引导模板（隐藏） ===== -->
+    <div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
+        <div class="tutorial-card">
+            <h2>👋 欢迎使用「今日天文学」</h2>
+            <p>几分钟带你快速上手</p>
+            <div class="tutorial-step active" data-step="1">
+                <div><span class="step-num">1</span> 设置 API 密钥</div>
+                <ul>
+                    <li>点击「⚙️ API 设置」展开面板</li>
+                    <li>粘贴你的 <strong>ADS Token</strong> 和 <strong>DeepSeek API Key</strong></li>
+                    <li>点击「保存设置」</li>
+                </ul>
+            </div>
+            <div class="tutorial-step" data-step="2">
+                <div><span class="step-num">2</span> 搜索关键词</div>
+                <ul>
+                    <li>在搜索框输入你感兴趣的天文学话题</li>
+                    <li>或点击「常用搜索」快捷标签</li>
+                    <li>等待 AI 生成综述</li>
+                </ul>
+            </div>
+            <div class="tutorial-step" data-step="3">
+                <div><span class="step-num">3</span> 深入阅读</div>
+                <ul>
+                    <li>引用论文的段落会有「📖 查看详情」按钮</li>
+                    <li>点击后右侧会展开详细分析</li>
+                    <li>支持数学公式渲染，可点击论文链接跳转</li>
+                </ul>
+            </div>
+            <div class="tutorial-dots">
+                <span class="active" data-dot="1"></span>
+                <span data-dot="2"></span>
+                <span data-dot="3"></span>
+            </div>
+            <div class="tutorial-actions">
+                <button class="btn-secondary" id="tutorialSkip">跳过</button>
+                <button class="btn-primary" id="tutorialNext">下一步 →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DOM 引用 =====
+        var sidePanel = document.getElementById('sidePanel');
+        var panelContent = document.getElementById('panelContent');
+        var keywordInput = document.getElementById('keyword');
+        var searchBtn = document.getElementById('searchBtn');
+        var updateBtn = document.getElementById('updateBtn');
+        var statusDiv = document.getElementById('status');
+        var resultsDiv = document.getElementById('results');
+
+        // ===== 缓存 =====
+        var searchCache = {};
+        var currentPapers = [];
+        var currentOverview = '';
+        var detailCache = {};
+        var currentDetailIndex = null;
+        var currentKeyword = '';
+
+        // ===== 搜索控制 =====
+        var isSearching = false;
+        var currentController = null;
+
+        // ===== 工具 =====
+        function getLocal(key) {
+            try {
+                var val = localStorage.getItem(key);
+                return val ? JSON.parse(val) : null;
+            } catch (e) { return null; }
+        }
+
+        function setLocal(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {}
+        }
+
+        function removeLocal(key) {
+            localStorage.removeItem(key);
+        }
+
+        // ===== 关键词管理 =====
+        var STORAGE_KEY = 'customKeywords';
+        var defaultKeywords = ['Dark Energy', 'Dark Matter', 'Hubble Tension', 'Early Dark Energy', 'Halo Galaxy Connection',
+            'Reionisation'
+        ];
+
+        function getKeywords() {
+            var stored = getLocal(STORAGE_KEY);
+            if (stored && Array.isArray(stored) && stored.length > 0) {
+                return stored;
+            }
+            setLocal(STORAGE_KEY, defaultKeywords);
+            return defaultKeywords;
+        }
+
+        function saveKeywords(keywords) {
+            setLocal(STORAGE_KEY, keywords);
+        }
+
+        function renderKeywords() {
+            var container = document.getElementById('keywordList');
+            if (!container) return;
+            var keywords = getKeywords();
+            container.innerHTML = '';
+            keywords.forEach(function(kw) {
+                var span = document.createElement('span');
+                span.className = 'preset-keyword';
+                span.dataset.keyword = kw;
+                span.textContent = kw;
+
+                var delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = '×';
+                delBtn.setAttribute('aria-label', '删除');
+                delBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    deleteKeyword(kw);
+                });
+                span.appendChild(delBtn);
+
+                span.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('delete-btn')) return;
+                    performSearch(kw, true, false);
+                });
+                container.appendChild(span);
+            });
+        }
+
+        function deleteKeyword(keyword) {
+            var keywords = getKeywords();
+            var newList = keywords.filter(function(k) { return k !== keyword; });
+            saveKeywords(newList);
+            renderKeywords();
+        }
+
+        function addKeyword() {
+            var addBtn = document.getElementById('addKeywordBtn');
+            if (!addBtn || addBtn.style.display === 'none') return;
+
+            addBtn.style.display = 'none';
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'add-keyword-input';
+            input.placeholder = '输入关键词...';
+            input.autofocus = true;
+            addBtn.parentNode.insertBefore(input, addBtn);
+            input.focus();
+
+            var isFinished = false;
+
+            function finish() {
+                if (isFinished) return;
+                isFinished = true;
+                var val = input.value.trim();
+                if (input.parentNode) input.remove();
+                addBtn.style.display = '';
+                if (val) {
+                    var keywords = getKeywords();
+                    var exists = keywords.some(function(k) { return k.toLowerCase() === val.toLowerCase(); });
+                    if (exists) {
+                        alert('该关键词已存在。');
+                        return;
+                    }
+                    keywords.push(val);
+                    saveKeywords(keywords);
+                    renderKeywords();
+                }
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    finish();
+                }
+            });
+            input.addEventListener('blur', function() {
+                setTimeout(finish, 150);
+            });
+        }
+
+        // ===== API 设置管理 =====
+        function initSettings() {
+            var adsInput = document.getElementById('adsToken');
+            var dskInput = document.getElementById('deepseekKey');
+            var saveBtn = document.getElementById('saveSettingsBtn');
+            var clearBtn = document.getElementById('clearCacheBtn');
+
+            adsInput.value = '';
+            dskInput.value = '';
+
+            function toggleSaveBtn() {
+                var ads = adsInput.value.trim();
+                var dsk = dskInput.value.trim();
+                saveBtn.disabled = !(ads || dsk);
+            }
+
+            adsInput.addEventListener('input', toggleSaveBtn);
+            dskInput.addEventListener('input', toggleSaveBtn);
+
+            saveBtn.addEventListener('click', function() {
+                var adsToken = adsInput.value.trim();
+                var deepseekKey = dskInput.value.trim();
+                if (!adsToken && !deepseekKey) {
+                    alert('请至少输入一项密钥');
+                    return;
+                }
+                setLocal('adsToken', adsToken);
+                setLocal('deepseekKey', deepseekKey);
+                saveBtn.disabled = true;
+                var originalText = saveBtn.textContent;
+                saveBtn.textContent = '✅ 已保存';
+                setTimeout(function() {
+                    saveBtn.textContent = originalText;
+                }, 2000);
+            });
+
+            // 清除所有缓存
+            clearBtn.addEventListener('click', function() {
+                if (confirm('确定要清除所有缓存数据吗？\n（包括搜索记录和详情缓存）')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+
+            toggleSaveBtn();
+        }
+
+        // ===== 引导系统 =====
+        function initTutorial() {
+            var overlay = document.getElementById('tutorialOverlay');
+            if (getLocal('hasSeenTutorial')) {
+                overlay.style.display = 'none';
+                return;
+            }
+            overlay.style.display = 'flex';
+
+            var steps = document.querySelectorAll('.tutorial-step');
+            var dots = document.querySelectorAll('.tutorial-dots span');
+            var currentStep = 0;
+
+            function goToStep(index) {
+                steps.forEach(function(el, i) {
+                    el.classList.toggle('active', i === index);
+                });
+                dots.forEach(function(el, i) {
+                    el.classList.toggle('active', i === index);
+                });
+                currentStep = index;
+            }
+
+            document.getElementById('tutorialNext').addEventListener('click', function() {
+                if (currentStep < steps.length - 1) {
+                    goToStep(currentStep + 1);
+                } else {
+                    // 完成
+                    setLocal('hasSeenTutorial', true);
+                    overlay.style.display = 'none';
+                }
+            });
+
+            document.getElementById('tutorialSkip').addEventListener('click', function() {
+                setLocal('hasSeenTutorial', true);
+                overlay.style.display = 'none';
+            });
+
+            // 点击外部不关闭，只能通过按钮
+        }
+
+        // ===== 详情面板 =====
+        function openSidePanel(topic, papers, paragraphIndex, btnElement) {
+            if (currentDetailIndex === paragraphIndex && sidePanel.classList.contains('open')) {
+                closeSidePanel();
+                return;
+            }
+
+            document.querySelectorAll('.expand-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            if (btnElement) {
+                btnElement.classList.add('active');
+            } else {
+                var btn = document.querySelector('.expand-btn[data-paragraph-index="' + paragraphIndex + '"]');
+                if (btn) btn.classList.add('active');
+            }
+
+            sidePanel.classList.add('open');
+            currentDetailIndex = paragraphIndex;
+
+            var onTransitionEnd = function(e) {
+                if (e.propertyName === 'width') {
+                    window.scrollTo({
+                        left: document.documentElement.scrollWidth,
+                        behavior: 'smooth'
+                    });
+                    sidePanel.removeEventListener('transitionend', onTransitionEnd);
+                }
+            };
+            sidePanel.addEventListener('transitionend', onTransitionEnd);
+            setTimeout(function() {
+                if (sidePanel.classList.contains('open')) {
+                    window.scrollTo({
+                        left: document.documentElement.scrollWidth,
+                        behavior: 'smooth'
+                    });
+                    sidePanel.removeEventListener('transitionend', onTransitionEnd);
+                }
+            }, 500);
+
+            var cacheKey = 'detail_' + currentKeyword + '_' + paragraphIndex;
+            var cachedData = getLocal(cacheKey);
+            if (cachedData) {
+                panelContent.innerHTML = cachedData;
+                detailCache[cacheKey] = cachedData;
+                renderMath();
+                return;
+            }
+            if (detailCache[cacheKey]) {
+                panelContent.innerHTML = detailCache[cacheKey];
+                renderMath();
+                return;
+            }
+
+            panelContent.innerHTML = '<div class="loading-text">⏳ 正在生成详情，请稍候...</div>';
+
+            var paperData = papers.map(function(p) {
+                return {
+                    title: p.title || '无标题',
+                    abstract: p.abstract || '无摘要',
+                    authors: p.authors || '',
+                    year: p.year || '',
+                    bibstem: p.bibstem || ''
+                };
+            });
+
+            var headers = {
+                'Content-Type': 'application/json',
+                'X-ADS-Token': getLocal('adsToken') || '',
+                'X-DeepSeek-Key': getLocal('deepseekKey') || ''
+            };
+
+            fetch('/expand', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ topic: topic, papers: paperData })
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        panelContent.innerHTML = '<div style="color:#FF6B6B;">❌ ' + data.error + '</div>';
+                    } else {
+                        var content = data.detailed_review;
+                        content = content.replace(/\*\*论文(\d+).*?\*\*/g, function(match, num) {
+                            var idx = parseInt(num) - 1;
+                            if (idx < 0 || idx >= papers.length) return match;
+                            var p = papers[idx];
+                            var firstAuthor = p.first_author || p.authors || 'Unknown';
+                            var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
+                            var year = p.year || '????';
+                            var citations = p.citations || 0;
+                            var bibstem = p.bibstem || '';
+                            var cleanBibstem = String(bibstem).split(/[,，\s]+/)[0] || '';
+                            var journalPart = cleanBibstem ? ' (' + cleanBibstem + '，引用数：' + citations + ')' :
+                                ' (引用数：' + citations + ')';
+                            return '**' + authorShort + ' et al. ' + year + journalPart + '**';
+                        });
+                        content = replacePaperRefs(content, papers);
+                        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        content = content.replace(/\n/g, '<br>');
+                        panelContent.innerHTML = content;
+                        detailCache[cacheKey] = content;
+                        setLocal(cacheKey, content);
+                        renderMath();
+                    }
+                })
+                .catch(function(err) {
+                    panelContent.innerHTML = '<div style="color:#FF6B6B;">❌ 网络错误: ' + err.message + '</div>';
+                });
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('open');
+            currentDetailIndex = null;
+            document.querySelectorAll('.expand-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+        }
+
+        function renderMath() {
+            if (window.renderMathInElement) {
+                try {
+                    window.renderMathInElement(panelContent, {
+                        delimiters: [{ left: '$', right: '$', display: false }]
+                    });
+                } catch (e) {}
+            }
+        }
+
+        function replacePaperRefs(text, papers) {
+            return text.replace(/论文(\d+)/g, function(match, num) {
+                var idx = parseInt(num) - 1;
+                if (idx >= 0 && idx < papers.length) {
+                    var p = papers[idx];
+                    if (p.bibcode) {
+                        var url = 'https://ui.adsabs.harvard.edu/abs/' + p.bibcode;
+                        var firstAuthor = p.first_author || p.authors || 'Unknown';
+                        var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
+                        var year = p.year || '????';
+                        return '<a href="' + url + '" target="_blank">' + authorShort + ' et al. ' + year + '</a>';
+                    } else {
+                        var firstAuthor = p.first_author || p.authors || 'Unknown';
+                        var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
+                        return authorShort + ' et al. ' + (p.year || '????');
+                    }
+                }
+                return match;
+            });
+        }
+
+        // ===== 显示结果 =====
+        function displayResults(data) {
+            currentPapers = data.papers || [];
+            currentOverview = data.overview || '';
+
+            var titleToIndex = {};
+            currentPapers.forEach(function(p, idx) {
+                var title = p.title.trim();
+                titleToIndex[title] = idx;
+            });
+
+            var overviewText = data.overview || '';
+            var rawParagraphs = overviewText.split(/\n\s*\n/).filter(function(p) { return p.trim().length > 0; });
+            // 去重：使用前100个字符作为指纹（去除首尾空白）
+            var seen = new Set();
+            rawParagraphs = rawParagraphs.filter(function(para) {
+                var fingerprint = para.trim().substring(0, 100);
+                if (seen.has(fingerprint)) return false;
+                seen.add(fingerprint);
+                return true;
+            });
+
+            var html = '<div class="overview-section">';
+            rawParagraphs.forEach(function(para, idx) {
+                var trimmed = para.trim();
+                var title = '';
+                var content = trimmed;
+                var titleMatch = trimmed.match(/^\*\*(.*?)\*\*/);
+                if (titleMatch) {
+                    title = titleMatch[1];
+                    content = trimmed.replace(/^\*\*.*?\*\*/, '').trim();
+                } else {
+                    var firstWords = trimmed.split(' ').slice(0, 4).join(' ');
+                    title = firstWords || '段落';
+                }
+                var hasRefs = /论文\d+/.test(content);
+                var contentWithLinks = replacePaperRefs(content, currentPapers);
+                var contentHtml = contentWithLinks.replace(/\n/g, ' ');
+                var finalContent = contentHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                html += '<div class="overview-card" data-paragraph-index="' + idx + '">';
+                html += '<div class="title">' + title + '</div>';
+                html += '<div class="content">' + finalContent + '</div>';
+                html += '<div class="actions">';
+                if (hasRefs) {
+                    html += '<button class="expand-btn" data-paragraph-index="' + idx + '">📖 查看详情</button>';
+                }
+                html += '</div></div>';
+            });
+            html += '</div>';
+
+            if (data.categories && data.categories.length > 0) {
+                data.categories.forEach(function(cat, idx) {
+                    html += '<div class="category-card">';
+                    html += '<div class="category-header" data-target="cat-' + idx + '">';
+                    html += '<span>📂 ' + cat.name + '（' + (cat.papers_with_links ? cat.papers_with_links.length : 0) +
+                        '篇）</span>';
+                    html += '<span class="arrow">▼</span>';
+                    html += '</div>';
+                    html += '<div class="category-body" id="cat-' + idx + '">';
+                    if (cat.papers_with_links) {
+                        cat.papers_with_links.forEach(function(p) {
+                            var bibcode = p.bibcode;
+                            var index = -1;
+                            if (bibcode) {
+                                for (var i = 0; i < currentPapers.length; i++) {
+                                    if (currentPapers[i].bibcode === bibcode) {
+                                        index = i;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (index === -1) {
+                                var title = p.title.trim();
+                                index = currentPapers.findIndex(function(paper) { return paper.title.trim() ===
+                                    title; });
+                            }
+                            var paperNum = (index !== -1) ? (index + 1) : '?';
+                            var label = '论文' + paperNum + ': ';
+
+                            if (p.bibcode) {
+                                var url = 'https://ui.adsabs.harvard.edu/abs/' + p.bibcode;
+                                html += '<a class="paper-link" href="' + url + '" target="_blank">';
+                                html += '<span style="color:#6A8CFF;font-weight:600;">' + label + '</span>' + p.title;
+                                html += '<span class="meta">' + (p.authors || '') + ' · ' + (p.year || '') +
+                                '</span>';
+                                html += '</a>';
+                            } else {
+                                html += '<div class="paper-link no-link">';
+                                html += '<span style="color:#6A8CFF;font-weight:600;">' + label + '</span>' + p.title;
+                                html += ' <span class="meta">（无链接）</span></div>';
+                            }
+                        });
+                    }
+                    html += '</div></div>';
+                });
+            } else {
+                html += '<p style="color:rgba(255,255,255,0.30);text-align:center;padding:1rem 0;">暂无分类数据</p>';
+            }
+
+            resultsDiv.innerHTML = html;
+
+            document.querySelectorAll('.category-header').forEach(function(header) {
+                header.addEventListener('click', function(e) {
+                    var targetId = this.dataset.target;
+                    var body = document.getElementById(targetId);
+                    var arrow = this.querySelector('.arrow');
+                    if (body) {
+                        body.classList.toggle('open');
+                        arrow.classList.toggle('open');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.expand-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var idx = parseInt(this.dataset.paragraphIndex);
+                    var rawParagraphs = currentOverview.split(/\n\s*\n/).filter(function(p) { return p.trim()
+                            .length > 0; });
+                    if (idx >= rawParagraphs.length) return;
+                    var paraText = rawParagraphs[idx];
+                    var refs = paraText.match(/论文(\d+)/g);
+                    if (!refs) {
+                        alert('该段落未引用具体论文。');
+                        return;
+                    }
+                    var indices = refs.map(function(ref) { return parseInt(ref.replace('论文', '')) - 1; });
+                    var selected = indices.map(function(i) { return currentPapers[i]; }).filter(function(p) {
+                        return p;
+                    });
+                    if (selected.length === 0) {
+                        alert('未找到匹配的论文。');
+                        return;
+                    }
+                    var title = '';
+                    var titleMatch = paraText.match(/^\*\*(.*?)\*\*/);
+                    if (titleMatch) title = titleMatch[1];
+                    else {
+                        var allTitles = document.querySelectorAll('.overview-card .title');
+                        if (allTitles[idx]) title = allTitles[idx].innerText;
+                        else title = '详情';
+                    }
+                    openSidePanel(title, selected, idx, this);
+                });
+            });
+
+            if (window.renderMathInElement) {
+                try {
+                    window.renderMathInElement(resultsDiv, {
+                        delimiters: [{ left: '$', right: '$', display: false }]
+                    });
+                } catch (e) {}
+            }
+        }
+
+        // ===== 搜索（核心） =====
+        function performSearch(keyword, pushHistory, forceUpdate) {
+            if (pushHistory === undefined) pushHistory = true;
+            if (forceUpdate === undefined) forceUpdate = false;
+            keyword = keyword.trim();
+            if (!keyword) {
+                setStatus('⚠️ 请输入关键词', 'error');
+                return;
+            }
+
+            closeSidePanel();
+
+            if (currentController) {
+                currentController.abort();
+                currentController = null;
+                isSearching = false;
+                updateBtn.textContent = '🔄 更新';
+                updateBtn.classList.remove('stop');
+            }
+
+            if (forceUpdate) {
+                removeLocal('searchResult_' + keyword);
+                var keysToRemove = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (key && key.startsWith('detail_') && key.indexOf(keyword) !== -1) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(function(k) { removeLocal(k); });
+                delete searchCache[keyword];
+                for (var k in detailCache) {
+                    if (k.startsWith('detail_') && k.indexOf(keyword) !== -1) {
+                        delete detailCache[k];
+                    }
+                }
+            }
+
+            if (!forceUpdate && searchCache[keyword]) {
+                var data = searchCache[keyword];
+                keywordInput.value = keyword;
+                currentKeyword = keyword;
+                displayResults(data);
+                var totalPapers = data.categories.reduce(function(acc, c) {
+                    return acc + (c.papers_with_links ? c.papers_with_links.length : 0);
+                }, 0);
+                setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                if (pushHistory) {
+                    var newUrl = '?q=' + encodeURIComponent(keyword);
+                    history.pushState({ keyword: keyword }, '', newUrl);
+                }
+                return;
+            }
+
+            if (!forceUpdate) {
+                var cachedData = getLocal('searchResult_' + keyword);
+                if (cachedData) {
+                    searchCache[keyword] = cachedData;
+                    keywordInput.value = keyword;
+                    currentKeyword = keyword;
+                    displayResults(cachedData);
+                    var totalPapers = cachedData.categories.reduce(function(acc, c) {
+                        return acc + (c.papers_with_links ? c.papers_with_links.length : 0);
+                    }, 0);
+                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自本地缓存）', 'success');
+                    if (pushHistory) {
+                        var newUrl = '?q=' + encodeURIComponent(keyword);
+                        history.pushState({ keyword: keyword }, '', newUrl);
+                    }
+                    return;
+                }
+            }
+
+            // 检查 API 密钥是否已设置
+            var adsToken = getLocal('adsToken');
+            var deepseekKey = getLocal('deepseekKey');
+            if (!adsToken || !deepseekKey) {
+                setStatus('⚠️ 请先在 ⚙️ API 设置 中填写 ADS Token 和 DeepSeek API Key', 'error');
+                return;
+            }
+
+            keywordInput.value = keyword;
+            searchBtn.disabled = true;
+            isSearching = true;
+            updateBtn.textContent = '⏹ 停止';
+            updateBtn.classList.add('stop');
+            updateBtn.disabled = false;
+
+            setStatus('🔄 正在搜索 “' + keyword + '” 并生成综述...', '');
+            resultsDiv.innerHTML = '';
+
+            currentController = new AbortController();
+            var signal = currentController.signal;
+
+            var headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-ADS-Token': adsToken || '',
+                'X-DeepSeek-Key': deepseekKey || ''
+            };
+
+            fetch('/search', {
+                    method: 'POST',
+                    headers: headers,
+                    body: new URLSearchParams({ keyword: keyword }),
+                    signal: signal
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(err) {
+                            throw new Error(err.error || '请求失败');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    searchCache[keyword] = data;
+                    setLocal('searchResult_' + keyword, data);
+                    currentKeyword = keyword;
+                    currentPapers = data.papers || [];
+                    currentOverview = data.overview || '';
+                    displayResults(data);
+                    var totalPapers = data.papers ? data.papers.length : 0;
+                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文', 'success');
+                    if (pushHistory) {
+                        var newUrl = '?q=' + encodeURIComponent(keyword);
+                        history.pushState({ keyword: keyword }, '', newUrl);
+                    }
+                })
+                .catch(function(err) {
+                    if (err.name === 'AbortError') {
+                        setStatus('⏹ 搜索已取消', '');
+                    } else {
+                        // 根据错误信息给出友好提示
+                        var msg = err.message || '未知错误';
+                        if (msg.includes('ADS Token') || msg.includes('未提供 ADS Token')) {
+                            setStatus('⚠️ ADS Token 无效，请检查 ⚙️ API 设置 中的 Token', 'error');
+                        } else if (msg.includes('DeepSeek') || msg.includes('未提供 DeepSeek')) {
+                            setStatus('⚠️ DeepSeek API Key 无效，请检查 ⚙️ API 设置 中的 Key', 'error');
+                        } else if (msg.includes('未找到相关论文')) {
+                            setStatus('📭 未找到与 “' + keyword + '” 相关的论文，请尝试其他关键词', 'error');
+                        } else {
+                            setStatus('❌ ' + msg, 'error');
+                        }
+                    }
+                })
+                .finally(function() {
+                    searchBtn.disabled = false;
+                    isSearching = false;
+                    updateBtn.textContent = '🔄 更新';
+                    updateBtn.classList.remove('stop');
+                    currentController = null;
+                });
+        }
+
+        // ===== 状态信息辅助函数 =====
+        function setStatus(text, type) {
+            statusDiv.textContent = text;
+            statusDiv.className = 'status';
+            if (type) {
+                statusDiv.classList.add(type);
+            }
+        }
+
+        // ===== 更新按钮 =====
+        function handleUpdateClick() {
+            if (isSearching) {
+                if (currentController) {
+                    currentController.abort();
+                    currentController = null;
+                }
+                isSearching = false;
+                updateBtn.textContent = '🔄 更新';
+                updateBtn.classList.remove('stop');
+                setStatus('⏹ 正在停止...', '');
+            } else {
+                var kw = keywordInput.value.trim() || currentKeyword;
+                if (!kw) {
+                    alert('请先输入或搜索一个关键词。');
+                    return;
+                }
+                performSearch(kw, true, true);
+            }
+        }
+
+        // ===== 初始化 =====
+        function init() {
+            renderKeywords();
+            document.getElementById('addKeywordBtn').addEventListener('click', addKeyword);
+            updateBtn.addEventListener('click', handleUpdateClick);
+            searchBtn.addEventListener('click', function() {
+                performSearch(keywordInput.value, true, false);
+            });
+            keywordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch(keywordInput.value, true, false);
+                }
+            });
+
+            initSettings();
+
+            document.getElementById('settingsToggle').addEventListener('click', function() {
+                var panel = document.getElementById('settingsPanel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // 引导
+            initTutorial();
+
+            // 页面加载时处理 URL 参数
+            var params = new URLSearchParams(window.location.search);
+            var q = params.get('q');
+            if (q) {
+                keywordInput.value = q;
+                currentKeyword = q;
+                var cachedData = getLocal('searchResult_' + q);
+                if (cachedData) {
+                    searchCache[q] = cachedData;
+                    currentPapers = cachedData.papers || [];
+                    currentOverview = cachedData.overview || '';
+                    displayResults(cachedData);
+                    var totalPapers = cachedData.papers ? cachedData.papers.length : 0;
+                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                } else {
+                    setStatus('📭 暂无缓存，点击 “🔄 更新” 按钮生成 “' + q + '” 的综述。', '');
+                    resultsDiv.innerHTML = '';
+                }
+            }
+        }
+
+        // popstate
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.keyword) {
+                var keyword = event.state.keyword;
+                keywordInput.value = keyword;
+                currentKeyword = keyword;
+                var cachedData = getLocal('searchResult_' + keyword);
+                if (cachedData) {
+                    searchCache[keyword] = cachedData;
+                    currentPapers = cachedData.papers || [];
+                    currentOverview = cachedData.overview || '';
+                    displayResults(cachedData);
+                    var totalPapers = cachedData.papers ? cachedData.papers.length : 0;
+                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                } else {
+                    setStatus('📭 暂无缓存，点击 “🔄 更新” 按钮生成综述。', '');
+                    resultsDiv.innerHTML = '';
+                    currentPapers = [];
+                    currentOverview = '';
+                }
+                closeSidePanel();
+            } else {
+                resultsDiv.innerHTML = '';
+                setStatus('✦ 输入关键词或点击常用搜索开始探索', '');
+                keywordInput.value = '';
+                currentPapers = [];
+                currentOverview = [];
+                currentKeyword = '';
+                closeSidePanel();
+            }
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
