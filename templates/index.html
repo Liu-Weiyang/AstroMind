@@ -4,10 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AstroMind</title>
+    <link rel="icon" type="image/svg+xml" href="/static/galaxy-2-solid.svg" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$', right: '$', display: false}]});">
+    <script>
+        // KaTeX 多 CDN 兜底加载（jsdelivr → unpkg → cdnjs），保证数学公式按 LaTeX 渲染
+        (function() {
+            function chain(srcs, i, done) {
+                if (i >= srcs.length) { done(); return; }
+                var s = document.createElement('script');
+                s.src = srcs[i];
+                s.onload = function() { chain(srcs, i + 1, done); };
+                s.onerror = function() { chain(srcs, i + 1, done); };
+                document.head.appendChild(s);
+            }
+            chain([
+                'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
+                'https://unpkg.com/katex@0.16.9/dist/katex.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/katex/0.16.9/katex.min.js'
+            ], 0, function() {
+                chain([
+                    'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js',
+                    'https://unpkg.com/katex@0.16.9/dist/contrib/auto-render.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/katex/0.16.9/contrib/auto-render.min.js'
+                ], 0, function() {
+                    if (window.renderMathInElement) {
+                        renderMathInElement(document.body, { delimiters: [{ left: '$', right: '$', display: false }] });
+                    }
+                });
+            });
+        })();
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
@@ -55,6 +80,11 @@
             flex-shrink: 0;
             min-width: fit-content;
         }
+        /* 空状态（未搜索）时主卡片垂直居中；有内容时贴顶，底部与网页下沿齐平，无空隙 */
+        body.content-empty .container {
+            margin-top: auto;
+            margin-bottom: auto;
+        }
 
         .main-content {
             flex: 0 0 1000px;
@@ -63,10 +93,8 @@
             height: auto;
             max-height: none;
             padding: 2rem 2.5rem;
-            overflow-y: auto;
+            position: relative;   /* 作为右上角 API 设置浮层的定位上下文 */
             background: rgba(18, 28, 40, 0.60);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.80);
@@ -83,55 +111,75 @@
             border-radius: 3px;
         }
 
-        /* ===== 标题居中 ===== */
+        /* ===== 标题区：层次更清晰、图标与文字更紧凑 ===== */
         .main-title {
             display: flex;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 0.8rem 1.5rem;
+            gap: 0.7rem 1.3rem;
             margin: 0 0 1.8rem 0;
             padding: 0;
             border: none;
             background: transparent;
             box-shadow: none;
         }
-        /* ===== 主标题：加粗、发光、层次感 ===== */
         .title-icon {
             display: inline-block;
             vertical-align: middle;
-            margin-right: 0px;
-            width: 44px;
-            height: 44px;
-            /* 将原色（假设为黑色）染成 #6A8CFF */
-            filter: brightness(0) saturate(100%) invert(47%) sepia(98%) saturate(1983%) hue-rotate(201deg) brightness(102%) contrast(102%);
+            margin-right: -6px;          /* 更贴近标题文字 */
+            width: 46px;
+            height: 46px;
+            filter: drop-shadow(0 0 10px rgba(106, 140, 255, 0.40));
+            transition: transform 0.25s ease;
         }
         .title-text {
             font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', sans-serif;
-            font-weight: 600;          /* 中等偏粗，不单薄 */
+            font-weight: 600;
             font-size: 3.2rem;
-            letter-spacing: 0.04em;    /* 微调字距，更舒展 */
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+            display: inline-flex;
+            align-items: flex-start;   /* 顶对齐，让 ALPHA 徽章贴在标题右上角 */
             color: #FFFFFF;
-            text-shadow: 
-                0 0 30px rgba(106, 140, 255, 0.12),
-                0 0 80px rgba(106, 140, 255, 0.04);
+            text-shadow:
+                0 0 30px rgba(106, 140, 255, 0.14),
+                0 0 80px rgba(106, 140, 255, 0.05);
             position: relative;
         }
-
         .astro {
-            font-weight: 300;                /* 轻盈，细体 */
-            letter-spacing: 0.02em;          /* 舒展 */
-            color: rgba(255, 255, 255, 0.85);
-        }
-
-        .mind {
-            font-weight: 500;                /* 加粗，厚重 */
+            font-weight: 300;
             letter-spacing: 0.02em;
-            color: #6A8CFF;                  /* 科技蓝 */
-            text-shadow: 0 0 40px rgba(106, 140, 255, 0.2);
+            color: rgba(255, 255, 255, 0.92);
+        }
+        .mind {
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #6A8CFF;
+            text-shadow: 0 0 42px rgba(106, 140, 255, 0.35);
         }
 
-        /* 底部光痕（更明显） */
+        /* ALPHA 测试标记：排在标题「AstroMind」文字右侧、顶对齐的小型字母胶囊，测试完成后移除 */
+        .alpha-badge {
+            position: static;
+            margin: -0.5em 0 0 0.5em;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;   /* 字母间距收紧，更紧凑 */
+            line-height: 1;
+            padding: 0.3em 0.55em;
+            color: #8AACFF;
+            border: 1px solid rgba(106, 140, 255, 0.45);
+            border-radius: 999px;
+            background: rgba(8, 12, 26, 0.55);
+            box-shadow: 0 0 12px rgba(106, 140, 255, 0.18);
+            opacity: 0.9;
+            white-space: nowrap;
+            user-select: none;
+            cursor: default;
+        }
+
+        /* 底部光痕 */
         .title-text::after {
             content: '';
             position: absolute;
@@ -139,11 +187,11 @@
             left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(106, 140, 255, 0.4) 20%, 
-                rgba(106, 140, 255, 0.6) 50%, 
-                rgba(106, 140, 255, 0.4) 80%, 
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(106, 140, 255, 0.4) 20%,
+                rgba(106, 140, 255, 0.6) 50%,
+                rgba(106, 140, 255, 0.4) 80%,
                 transparent);
             border-radius: 2px;
             opacity: 0.8;
@@ -152,6 +200,7 @@
         .brand-box {
             display: flex;
             align-items: center;
+            align-self: center;
             gap: 0.5rem;
             padding: 0.2rem 0.8rem 0.2rem 0.6rem;
             border-radius: 40px;
@@ -182,54 +231,107 @@
             filter: brightness(1.0) saturate(1.2);
         }
 
-        /* ===== API 设置面板 ===== */
-        .settings-toggle {
-            display: inline-block;
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8rem;
+        /* ===== API 设置：右上角齿轮式浮层 ===== */
+        /* ===== 左上角工具条：语言切换 + API 设置 ===== */
+        .toolbar {
+            position: absolute;
+            top: 1.1rem;
+            left: 1.4rem;
+            z-index: 40;
+            display: flex;
+            gap: 0.45rem;
+        }
+        .tool-btn {
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            padding: 0 0.6rem;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.85rem;
             cursor: pointer;
-            margin-bottom: 0.5rem;
-            transition: color 0.2s;
+            font-family: inherit;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
         }
-        .settings-toggle:hover {
-            color: #6A8CFF;
+        .tool-btn:hover {
+            color: #8AACFF;
+            border-color: rgba(106, 140, 255, 0.40);
+            background: rgba(106, 140, 255, 0.08);
         }
-        .settings-panel {
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
+        #langLabel {
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+        .tool-btn .ico {
+            width: 0.95em;
+            height: 0.95em;
+        }
+        .loading-text .ico {
+            animation: spin 2.2s linear infinite;
+        }
+        #settingsPanel {
+            position: absolute;
+            top: 3.4rem;
+            left: 1.4rem;
+            right: auto;
+            width: 480px;
+            z-index: 40;
             padding: 1.2rem 1.5rem;
-            margin-bottom: 1.2rem;
-            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(20, 26, 34, 0.97);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.70);
+            animation: fadeUp 0.25s ease;
         }
         .settings-row {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 0.8rem;
+            gap: 0.4rem 0.8rem;
+            margin-bottom: 0.9rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 0.85rem 1rem 0.7rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .settings-row:focus-within {
+            border-color: rgba(106, 140, 255, 0.4);
+            background: rgba(106, 140, 255, 0.04);
         }
         .settings-row label {
-            min-width: 120px;
-            color: rgba(255,255,255,0.7);
+            flex: 0 0 100%;   /* 标签独占一行，保证两行完全对齐 */
+            color: #8AACFF;   /* 与页面其它强调色统一 */
             font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
         }
         .settings-row input {
-            flex: 1;
+            flex: 1 1 100%;   /* 输入框独占一行、全宽（约为原来的两倍长） */
             min-width: 0;
             width: 100%;
-            padding: 0.5rem 1rem;
+            padding: 0.7rem 1rem;
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 8px;
             color: #E8EDF2;
             font-family: inherit;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         .settings-row input:focus {
             border-color: #6A8CFF;
+            box-shadow: 0 0 0 3px rgba(106,140,255,0.12);
             outline: none;
         }
         .settings-row .hint {
+            flex: 0 0 100%;   /* 提示文字换行到输入框下方，不影响输入框长度 */
             font-size: 0.75rem;
             color: rgba(255,255,255,0.3);
         }
@@ -241,23 +343,27 @@
             text-decoration: underline;
         }
         #saveSettingsBtn {
-            padding: 0.5rem 2rem;
-            background: #6A8CFF;
-            border: none;
-            border-radius: 8px;
+            padding: 0.55rem 2.2rem;
+            background: linear-gradient(145deg, #24498C, #2F66B8);
+            border: 1px solid rgba(106,140,255,0.35);
+            border-radius: 10px;
             color: #fff;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s, opacity 0.2s;
+            font-family: inherit;
+            transition: background 0.2s, opacity 0.2s, box-shadow 0.2s, transform 0.15s;
         }
         #saveSettingsBtn:disabled {
-            background: #4a4a4a;
+            background: #3a3f4a;
+            border-color: rgba(255,255,255,0.08);
             color: #888;
             cursor: not-allowed;
             opacity: 0.6;
         }
         #saveSettingsBtn:not(:disabled):hover {
-            background: #8AACFF;
+            background: linear-gradient(145deg, #2F66B8, #3E7AD6);
+            box-shadow: 0 4px 16px rgba(42,92,154,0.4);
+            transform: translateY(-1px);
         }
         .settings-extra {
             margin-top: 1rem;
@@ -275,7 +381,8 @@
             color: rgba(255,255,255,0.5);
             cursor: pointer;
             font-size: 0.8rem;
-            transition: background 0.2s, border-color 0.2s;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
         .settings-extra button:hover {
             background: rgba(255,80,80,0.1);
@@ -308,6 +415,8 @@
             align-items: center;
             padding: 0.4rem 1.2rem;
             position: relative;
+            height: 2.2rem;
+            box-sizing: border-box;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 40px;
@@ -316,13 +425,14 @@
             color: rgba(255, 255, 255, 0.70);
             cursor: pointer;
             user-select: none;
-            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
         }
         .preset-keyword:hover {
             background: rgba(106, 140, 255, 0.15);
             border-color: #6A8CFF;
             color: #FFFFFF;
             transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(106, 140, 255, 0.18);
         }
         .preset-keyword .delete-btn {
             position: absolute;
@@ -357,14 +467,18 @@
             align-items: center;
             justify-content: center;
             padding: 0.4rem 1.2rem;
+            height: 2.2rem;   /* 与预设关键词按钮高度完全一致 */
+            box-sizing: border-box;
             border-radius: 40px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             background: rgba(255, 255, 255, 0.04);
             color: rgba(255, 255, 255, 0.50);
-            font-size: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
             font-weight: 400;
             cursor: pointer;
-            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s, color 0.2s;
         }
         .add-keyword-btn:hover {
             background: rgba(106, 140, 255, 0.15);
@@ -384,30 +498,36 @@
             outline: none;
             width: auto;
             min-width: 100px;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         .add-keyword-input:focus {
             border-color: #6A8CFF;
+            box-shadow: 0 0 0 3px rgba(106, 140, 255, 0.15);
         }
 
-        /* ===== 搜索栏 ===== */
+        /* ===== 搜索栏：更有“搜索入口”的引导感 ===== */
         .search-box {
             display: flex;
             gap: 0.8rem;
-            margin: 0 0 1.5rem 0;
+            margin: 0 0 1.6rem 0;
             flex-wrap: wrap;
         }
         .search-box input {
             flex: 1;
-            min-width: 150px;
-            padding: 0.8rem 1.2rem;
-            background: rgba(0, 0, 0, 0.30);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
+            min-width: 260px;   /* 输入框加长 */
+            padding: 0.8rem 1.3rem 0.8rem 2.9rem;   /* 左侧留出放大镜图标位置 */
+            background-color: rgba(0, 0, 0, 0.35);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236A8CFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 1rem center;
+            background-size: 1.05rem;
+            border: 1px solid rgba(106, 140, 255, 0.22);
+            border-radius: 16px;
             font-size: 1rem;
             color: #E8EDF2;
             font-family: inherit;
-            transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
         }
         .search-box input::placeholder {
             color: rgba(255, 255, 255, 0.30);
@@ -415,30 +535,35 @@
         .search-box input:focus {
             outline: none;
             border-color: #6A8CFF;
-            background: rgba(0, 0, 0, 0.50);
-            box-shadow: 0 0 0 3px rgba(106, 140, 255, 0.15);
+            background-color: rgba(0, 0, 0, 0.50);
+            box-shadow: 0 0 0 3px rgba(106, 140, 255, 0.16), 0 8px 28px rgba(0, 0, 0, 0.30);
         }
         .search-box button {
-            padding: 0.8rem 2.2rem;
-            background: linear-gradient(145deg, #1E3A6F, #2A5C9A);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.72rem 1.5rem;   /* 搜索按钮缩小，但明显比更新按钮大 */
+            background: linear-gradient(145deg, #5D7DF2, #7C9AFF);   /* 与 Mind 的 #6A8CFF 一致 */
             color: #fff;
-            border: none;
+            border: 1px solid rgba(106, 140, 255, 0.35);
             border-radius: 14px;
             font-weight: 600;
-            font-size: 1rem;
-            letter-spacing: 0.04em;
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
             cursor: pointer;
             font-family: inherit;
-            transition: background 0.25s, transform 0.15s, box-shadow 0.25s;
-            box-shadow: 0 4px 16px rgba(42, 92, 154, 0.30);
+            box-shadow: 0 4px 18px rgba(106, 140, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: background 0.25s, transform 0.18s, box-shadow 0.25s, opacity 0.2s, border-color 0.25s;
         }
         .search-box button:hover:not(:disabled) {
-            background: linear-gradient(145deg, #2A5C9A, #3A7CCF);
-            box-shadow: 0 8px 28px rgba(42, 92, 154, 0.50);
-            transform: translateY(-2px);
+            background: linear-gradient(145deg, #6A8CFF, #8FAAFF);
+            box-shadow: 0 8px 28px rgba(106, 140, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
         }
         .search-box button:active:not(:disabled) {
             transform: translateY(0px);
+            box-shadow: 0 3px 12px rgba(106, 140, 255, 0.40);
         }
         .search-box button:disabled {
             opacity: 0.40;
@@ -449,24 +574,26 @@
         .search-box .update-btn {
             background: rgba(255, 255, 255, 0.06);
             box-shadow: none;
-            padding: 0.8rem 1.2rem;
-            border: 1px solid rgba(255, 255, 255, 0.10);
+            padding: 0.55rem 0.9rem;   /* 更新按钮更小，明显小于搜索按钮 */
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: #B0C4DE;
+            font-size: 0.85rem;
         }
         .search-box .update-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(106, 140, 255, 0.14);
             border-color: #6A8CFF;
             color: #FFFFFF;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
         .search-box .update-btn.stop {
-            background: rgba(255, 80, 80, 0.15);
-            border-color: rgba(255, 80, 80, 0.3);
+            background: rgba(255, 80, 80, 0.16);
+            border-color: rgba(255, 80, 80, 0.40);
             color: #FF6B6B;
         }
         .search-box .update-btn.stop:hover:not(:disabled) {
-            background: rgba(255, 80, 80, 0.25);
+            background: rgba(255, 80, 80, 0.26);
             border-color: #FF6B6B;
+            box-shadow: 0 4px 18px rgba(255, 80, 80, 0.4);   /* 仅鼠标悬停时才显示红色阴影 */
             color: #FFFFFF;
         }
 
@@ -479,8 +606,6 @@
             width: 0;
             overflow: hidden;
             background: rgba(22, 27, 34, 0.98);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.80);
@@ -489,18 +614,17 @@
             height: 80vh;
             align-self: flex-start;
             opacity: 0;
-            transform: translateX(20px);
-            transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 0.35s ease 0.05s,
-                transform 0.40s ease 0.05s;
+            /* 移除 transform: translateX(20px); 保留 width + opacity 过渡 */
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 0.35s ease 0.05s;
+            will-change: width, opacity;   /* 新增：提示浏览器优化 */
         }
         .side-panel.open {
-            width: 520px;
+            width: 560px;
             opacity: 1;
-            transform: translateX(0);
         }
         .side-panel-wrapper {
-            width: 520px;
+            width: 560px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -528,26 +652,36 @@
             padding: 0;
         }
         .panel-header .close-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: none;
             border: none;
+            border-radius: 50%;
             color: #8A9BB0;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
+            line-height: 1;
             cursor: pointer;
-            transition: color 0.2s;
-            padding: 0 0 0 1rem;
+            padding: 0;
+            transform-origin: center center;   /* 确保围绕叉号自身中心旋转 */
+            transition: color 0.2s, background 0.2s, transform 0.25s ease;
         }
         .panel-header .close-btn:hover {
             color: #E8EDF2;
+            background: rgba(255, 255, 255, 0.06);
+            transform: rotate(90deg);
         }
         .side-panel .content {
             flex: 1;
             overflow-y: auto;
-            padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+            padding: 0.8rem 1.5rem 2rem 1.5rem;
             white-space: pre-wrap;
             text-align: left;
             word-break: break-word;
-            color: #E8EDF2;
-            line-height: 1.8;
+            color: rgba(232, 237, 242, 0.92);
+            line-height: 1.9;
             font-size: 0.95rem;
         }
         .side-panel .content::-webkit-scrollbar {
@@ -563,49 +697,202 @@
         .side-panel .content strong {
             color: #6A8CFF;
         }
+        /* 详情面板小标题（作者 et al. 年份（期刊，引用数）） */
+        .side-panel .content .detail-title {
+            display: block;
+            margin: 1.5rem 0 0.6rem;
+            padding: 0.55rem 0.9rem;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.55;
+            color: #7C9AFF;
+            background: rgba(106, 140, 255, 0.08);
+            border: 1px solid rgba(106, 140, 255, 0.14);
+            border-left: 3px solid #6A8CFF;
+            border-radius: 10px;
+        }
+        .side-panel .content .detail-title:first-child {
+            margin-top: 0.3rem;
+        }
+        .side-panel .content .detail-title + br {
+            display: none;
+        }
+        .side-panel .content .detail-title a {
+            color: #A8BCFF;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .side-panel .content .detail-title a:hover {
+            color: #FFFFFF;
+        }
+        .side-panel .content .detail-meta {
+            color: rgba(255, 255, 255, 0.55);
+            font-weight: 400;
+            font-size: 0.88em;
+        }
+        /* 详情卡片：原文 + 逐字翻译 */
+        .side-panel .content .detail-paper {
+            margin: 0 0 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .side-panel .content .detail-paper:last-child {
+            border-bottom: none;
+        }
+        .side-panel .content .detail-label {
+            margin: 0.8rem 0 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .side-panel .content .detail-abstract {
+            font-size: 0.92rem;
+            line-height: 1.75;
+            color: rgba(232, 237, 242, 0.85);
+        }
         .side-panel .content a {
             color: #6A8CFF;
-            text-decoration: none;
-            border-bottom: 1px dashed rgba(106, 140, 255, 0.3);
+            text-decoration: none;   /* 不加下划线，保持干净 */
+            transition: color 0.2s;
         }
         .side-panel .content a:hover {
-            color: #8AACFF;
-            border-bottom-color: #8AACFF;
+            color: #9DB4FF;
         }
         .side-panel .loading-text {
             color: rgba(255, 255, 255, 0.5);
             text-align: center;
             padding: 50px 0;
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        /* 面板已打开时切换卡片类型（详情 ↔ 跨领域连接）：仅内容淡入，面板宽度不变，主框架不位移 */
+        .side-panel .content.swap-in {
+            animation: panelSwapIn 0.4s ease;
+        }
+        @keyframes panelSwapIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        /* ===== 综述卡片 ===== */
+        /* 连接报告专用样式（小标题复用 .detail-title，与查看详情一致） */
+        .side-panel .content .connect-label {
+            font-weight: 600;
+            color: #9DB4FF;
+            margin: 1rem 0 0.35rem;
+            font-size: 0.92rem;
+        }
+        .side-panel .content .connect-body {
+            margin: 0.25rem 0 0.5rem;
+        }
+        .side-panel .content .connect-sub {
+            font-weight: 600;
+            color: #A8BCFF;
+            margin-top: 0.8rem;
+        }
+        .side-panel .content .connect-inline {
+            font-weight: 600;
+            color: #9DB4FF;
+        }
+        .side-panel .content .connect-migration {
+            margin-top: 0.9rem;
+            padding: 0.6rem 0.9rem;
+            background: rgba(106, 140, 255, 0.08);
+            border-left: 3px solid #6FCF97;
+            border-radius: 8px;
+            line-height: 1.7;
+        }
+        .side-panel .content .connect-migration .connect-inline {
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        .side-panel .content .connect-pool {
+            margin-bottom: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.82rem;
+        }
+        .side-panel .content .connect-pool .ico {
+            vertical-align: -0.12em;
+        }
+        .side-panel .content .connect-scores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.55rem 0 0.45rem;
+        }
+        .side-panel .content .score-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.72rem;
+            padding: 0.16rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid rgba(106, 140, 255, 0.28);
+            color: #A8BCFF;
+            background: rgba(106, 140, 255, 0.06);
+        }
+        .side-panel .content .score-chip b {
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        .side-panel .content .score-chip.total {
+            border-color: rgba(111, 207, 151, 0.45);
+            color: #6FCF97;
+            background: rgba(111, 207, 151, 0.08);
+        }
+        .side-panel .content .connect-rationale {
+            margin: 0.35rem 0 0.4rem;
+            color: rgba(232, 237, 242, 0.8);
+        }
+        .side-panel .content .connect-verify {
+            margin: 0.2rem 0 0.6rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85em;
+        }
+        .side-panel .content .connect-verify .connect-inline {
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        /* ===== 综述段落：平铺分隔线式（不做卡片堆卡片） ===== */
         .overview-section {
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
             margin-bottom: 2.5rem;
         }
         .overview-card {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            padding: 1.5rem 1.8rem;
-            transition: background 0.2s, border-color 0.2s;
+            position: relative;
+            padding: 1.15rem 0.2rem 1.35rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            animation: cardIn 0.4s ease both;
         }
-        .overview-card:hover {
-            background: rgba(0, 0, 0, 0.35);
-            border-color: rgba(255, 255, 255, 0.10);
+        .overview-card:last-child {
+            border-bottom: none;
         }
         .overview-card .title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #6A8CFF;
-            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 700;
+            font-size: 1.13rem;
+            letter-spacing: 0.01em;
+            color: #E8EDF2;
+            margin-bottom: 0.55rem;
+        }
+        .overview-card .title::before {
+            content: '';
+            width: 4px;
+            height: 1.05em;
+            border-radius: 2px;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #6A8CFF, rgba(106, 140, 255, 0.35));
+            box-shadow: 0 0 8px rgba(106, 140, 255, 0.45);
         }
         .overview-card .content {
-            font-size: 1rem;
-            line-height: 1.8;
-            color: #E8EDF2;
+            font-size: 0.97rem;
+            line-height: 1.85;
+            color: rgba(232, 237, 242, 0.86);
             white-space: normal;
             text-align: justify;
             word-break: break-word;
@@ -613,32 +900,39 @@
         .overview-card .content a {
             color: #6A8CFF;
             text-decoration: none;
-            border-bottom: 1px dashed rgba(106, 140, 255, 0.3);
+            transition: color 0.2s;
         }
         .overview-card .content a:hover {
-            color: #8AACFF;
-            border-bottom-color: #8AACFF;
+            color: #9DB4FF;
         }
         .overview-card .actions {
-            margin-top: 1rem;
+            margin-top: 0.85rem;
             display: flex;
             justify-content: flex-end;
+            gap: 0.6rem;
+            flex-wrap: wrap;
         }
         .expand-btn {
-            background: rgba(106, 140, 255, 0.15);
-            border: 1px solid rgba(106, 140, 255, 0.20);
-            color: #6A8CFF;
-            padding: 0.4rem 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(106, 140, 255, 0.12);
+            border: 1px solid rgba(106, 140, 255, 0.25);
+            color: #8AACFF;
+            padding: 0.45rem 1.3rem;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
             font-family: inherit;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
         }
         .expand-btn:hover {
-            background: rgba(106, 140, 255, 0.25);
+            background: rgba(106, 140, 255, 0.22);
             border-color: #6A8CFF;
+            color: #FFFFFF;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(106, 140, 255, 0.22);
         }
         .expand-btn.active {
             background: #6A8CFF !important;
@@ -646,37 +940,61 @@
             border-color: #6A8CFF !important;
             box-shadow: 0 0 20px rgba(106, 140, 255, 0.4);
         }
-
-        /* ===== 分类卡片 ===== */
-        .category-card {
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            margin-bottom: 0.8rem;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.20);
-            transition: border-color 0.25s, box-shadow 0.25s;
+        .connect-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(106, 140, 255, 0.12);
+            border: 1px solid rgba(106, 140, 255, 0.3);
+            color: #8AACFF;
+            padding: 0.45rem 1.3rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
         }
-        .category-card:hover {
-            border-color: rgba(106, 140, 255, 0.20);
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.40);
+        .connect-btn:hover:not(:disabled) {
+            background: rgba(106, 140, 255, 0.22);
+            border-color: #6A8CFF;
+            color: #FFFFFF;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(106, 140, 255, 0.22);
+        }
+        .connect-btn.active {
+            background: #6A8CFF !important;
+            color: #FFFFFF !important;
+            border-color: #6A8CFF !important;
+            box-shadow: 0 0 20px rgba(106, 140, 255, 0.4);
+        }
+        .connect-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== 分类抽屉：平铺分隔线式 ===== */
+        .category-card {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .category-card:last-child {
+            border-bottom: none;
         }
         .category-header {
-            padding: 0.9rem 1.5rem;
+            padding: 1rem 0.2rem 0.9rem;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.02rem;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             user-select: none;
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid transparent;
             color: #FFFFFF;
             font-family: inherit;
-            transition: background 0.2s;
+            transition: color 0.2s;
         }
         .category-header:hover {
-            background: rgba(255, 255, 255, 0.04);
+            color: #8AACFF;
         }
         .category-header .arrow {
             transition: transform 0.35s ease;
@@ -690,38 +1008,31 @@
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            padding: 0 1.5rem;
-            transform: translateY(-8px);
+            padding: 0 0.2rem;
             transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity 0.35s ease,
-                padding 0.3s ease,
-                transform 0.35s ease;
+                padding 0.3s ease;
         }
         .category-body.open {
             max-height: 2000px;
             opacity: 1;
-            padding: 0.5rem 1.5rem 1.5rem;
-            transform: translateY(0);
+            padding: 0.3rem 0.2rem 1.2rem;
         }
         .paper-link {
             display: block;
-            padding: 0.6rem 0.8rem;
-            margin: 0.15rem 0;
+            padding: 0.55rem 0.7rem;
+            margin: 0.1rem 0;
             border-radius: 10px;
-            border: 1px solid transparent;
             color: #D0D8E0;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 0.98rem;
             font-family: inherit;
-            transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-            transform: translateX(0);
+            transition: background 0.2s, color 0.2s, transform 0.15s;
         }
         .paper-link:hover {
             background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.06);
             color: #FFFFFF;
-            transform: translateX(6px);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.30);
+            transform: translateX(4px);
         }
         .paper-link .meta {
             font-size: 0.75rem;
@@ -735,21 +1046,39 @@
             color: rgba(255, 255, 255, 0.20);
         }
 
+        /* ===== 抽象图标基类 ===== */
+        .ico {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.14em;
+            flex-shrink: 0;
+        }
+
+        /* ===== 状态栏 ===== */
         .status {
-            color: rgba(255, 255, 255, 0.50);
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: rgba(255, 255, 255, 0.55);
             margin-bottom: 1.2rem;
             font-size: 0.95rem;
             font-weight: 400;
             letter-spacing: 0.02em;
             font-family: inherit;
-            min-height: 1.6rem;
+            min-height: 1.7rem;
             transition: color 0.3s;
         }
         .status.error {
-            color: #FF6B6B;
+            color: #FF8A8A;
         }
         .status.success {
-            color: #4CAF50;
+            color: #6FCF97;
+        }
+        .status.loading {
+            color: #8AACFF;
+        }
+        .status .ico {
+            opacity: 0.85;
         }
         .loading {
             display: flex;
@@ -769,6 +1098,14 @@
                 transform: rotate(360deg);
             }
         }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.55; }
+            50% { opacity: 1; }
+        }
+        @keyframes cardIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         .error {
             color: #FF6B6B;
             background: rgba(255, 107, 107, 0.08);
@@ -778,15 +1115,67 @@
         }
         .footer {
             font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', sans-serif;
-            font-weight: 300;                 /* 细体，轻盈感 */
-            font-size: 0.85rem;               /* 比标准稍大一点，更有存在感 */
+            font-weight: 300;
+            font-size: 0.85rem;
             letter-spacing: 0.04em;
-            color: rgba(255, 255, 255, 0.3);  /* 淡色，不抢镜 */
+            color: rgba(255, 255, 255, 0.35);
             text-align: center;
             margin-top: 3rem;
             padding-top: 1.5rem;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
             transition: color 0.3s;
+        }
+
+        /* ===== 空状态 / 加载状态占位 ===== */
+        #results.is-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 0 4rem;
+        }
+        #results.is-loading::before {
+            content: '';
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 3px solid rgba(106, 140, 255, 0.20);
+            border-top-color: #6A8CFF;
+            animation: spin 0.8s linear infinite;
+        }
+        #results.is-loading::after {
+            content: var(--loading-text, '正在检索文献并生成综述…');
+            margin-top: 1.1rem;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+        }
+        #results:empty:not(.is-loading)::before {
+            content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236A8CFF'%3E%3Cpath d='M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3.5z'/%3E%3C/svg%3E");
+            display: block;
+            width: 3.2rem;
+            height: 3.2rem;
+            margin: 3.2rem auto 0;
+            opacity: 0.32;
+            animation: floatStar 2.8s ease-in-out infinite;
+        }
+        #results:empty:not(.is-loading)::after {
+            content: var(--empty-hint, '输入关键词或点击常用搜索，让 AI 为你生成研究综述');
+            display: block;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            margin-top: 0.8rem;
+            padding-bottom: 3.2rem;
+        }
+        /* 出错时隐藏占位，避免误导 */
+        .status.error + #results:empty:not(.is-loading)::before,
+        .status.error + #results:empty:not(.is-loading)::after {
+            display: none;
+        }
+        @keyframes floatStar {
+            0%, 100% { transform: translateY(0); opacity: 0.75; }
+            50% { transform: translateY(-7px); opacity: 1; }
         }
 
         /* ===== 引导样式 ===== */
@@ -797,8 +1186,6 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -806,7 +1193,8 @@
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
         }
         .tutorial-card {
-            max-width: 600px;
+            max-width: 500px;
+            width: 100%;          /* ← 新增，固定宽度为父容器宽度的 100% */
             background: rgba(22, 27, 34, 0.95);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
@@ -814,16 +1202,36 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             text-align: left;
             animation: fadeUp 0.4s ease;
+            min-height: 460px;                 /* 固定卡片高度，三页内容都能容纳且换页时大小不变 */
+            display: flex;
+            flex-direction: column;
+        }
+        .tutorial-card .tutorial-actions {
+            margin-top: auto;                  /* 按钮固定在底部，不随页内容跳动 */
         }
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .tutorial-card h2 {
             font-weight: 300;
             font-size: 1.8rem;
             margin-bottom: 0.5rem;
             color: #E8EDF2;
+        }
+        /* 引导标题中的 AstroMind：与大标题完全相同的字体与图标样式 */
+        .tutorial-card h2.tutorial-title {
+            font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #FFFFFF;
+        }
+        .tutorial-card h2.tutorial-title .title-icon {
+            display: inline-block;
+            width: 38px;
+            height: 38px;
+            margin: 0 0.4rem 0 0;   /* 与大标题一致：vertical-align 垂直居中、无负边距 */
+            vertical-align: middle;
         }
         .tutorial-card p {
             color: rgba(255,255,255,0.7);
@@ -862,11 +1270,13 @@
             gap: 1rem;
         }
         .tutorial-actions button {
-            padding: 0.6rem 1.8rem;
+            padding: 0.55rem 1.2rem;
+            min-width: 8rem;   /* 四个按钮（跳过/上一页/下一步/完成）宽度一致 */
             border-radius: 40px;
             border: none;
             font-weight: 600;
             cursor: pointer;
+            font-family: inherit;
             transition: background 0.2s, transform 0.15s;
         }
         .tutorial-actions .btn-primary {
@@ -897,6 +1307,7 @@
             height: 8px;
             border-radius: 50%;
             background: rgba(255,255,255,0.2);
+            cursor: pointer;   /* 圆点可点击跳页 */
             transition: background 0.3s;
         }
         .tutorial-dots span.active {
@@ -915,8 +1326,6 @@
                 flex: 1;
                 width: 100%;
                 height: auto;
-                max-height: 60vh;
-                overflow-y: auto;
                 padding: 1.2rem;
             }
             .side-panel {
@@ -927,16 +1336,13 @@
                 max-height: 60vh;
                 overflow: hidden;
                 border-radius: 24px;
-                transform: translateY(20px);
                 opacity: 0;
-                transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                    opacity 0.35s ease 0.05s,
-                    transform 0.40s ease 0.05s;
+                transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.35s ease 0.05s;
             }
             .side-panel.open {
                 width: 100%;
                 opacity: 1;
-                transform: translateY(0);
             }
             .side-panel-wrapper {
                 width: 100%;
@@ -946,10 +1352,28 @@
                 border-radius: 24px 24px 0 0;
             }
             .side-panel .content {
-                padding: 0.3rem 1rem 1rem 1rem;
+                padding: 0.5rem 1rem 1.2rem 1rem;
             }
             .title-text {
-                font-size: 1.8rem;
+                font-size: 1.9rem;
+            }
+            .title-icon {
+                width: 34px;
+                height: 34px;
+                margin-right: -4px;
+            }
+            .alpha-badge {
+                font-size: 0.42rem;
+                margin: -0.4em 0 0 0.4em;
+            }
+            .toolbar {
+                position: static;
+                margin-bottom: 0.7rem;
+            }
+            #settingsPanel {
+                position: static;
+                width: 100%;
+                margin-bottom: 1rem;
             }
             .brand-box {
                 padding: 0.1rem 0.6rem 0.1rem 0.4rem;
@@ -963,6 +1387,10 @@
             }
             .search-box {
                 flex-wrap: wrap;
+            }
+            .search-box input {
+                padding-left: 2.6rem;
+                background-position: 0.8rem center;
             }
             .search-box button {
                 width: 100%;
@@ -979,16 +1407,20 @@
                 font-size: 0.75rem;
             }
             .overview-card {
-                padding: 1rem 1.2rem;
+                padding: 1rem 0 1.1rem;
             }
             .tutorial-card {
                 margin: 1rem;
                 padding: 1.5rem;
             }
+            #results:empty:not(.is-loading)::before {
+                font-size: 2.6rem;
+                margin-top: 2.4rem;
+            }
         }
     </style>
 </head>
-<body>
+<body class="content-empty">
     <div class="container" id="mainContainer">
         <div class="main-content" id="mainContent">
             <!-- 标题 -->
@@ -996,6 +1428,7 @@
                 <img src="{{ url_for('static', filename='galaxy-2-solid.svg') }}" alt="图标" class="title-icon">
                 <span class="title-text">
                     <span class="astro">Astro</span><span class="mind">Mind</span>
+                    <span class="alpha-badge" data-i18n-title="alpha.title" title="A测版本">ALPHA</span>
                 </span>
                 <div class="brand-box">
                     <span class="powered-by">powered by</span>
@@ -1004,50 +1437,54 @@
                 </div>
             </h1>
 
-            <!-- API 设置 -->
-            <div class="settings-toggle" id="settingsToggle">⚙️ API 设置</div>
+            <!-- 左上角工具条：语言切换 + API 设置 -->
+            <div class="toolbar">
+                <button id="langBtn" class="tool-btn" data-i18n-title="lang.title" title="切换语言"><span id="langLabel">中</span></button>
+                <button id="settingsToggle" class="tool-btn" data-i18n-title="settings.title" title="API 设置"></button>
+            </div>
             <div class="settings-panel" id="settingsPanel" style="display:none;">
                 <div class="settings-row">
                     <label for="adsToken">ADS Token</label>
                     <input type="text" id="adsToken" placeholder="输入你的 ADS 令牌" />
-                    <span class="hint">从 <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">这里获取</a></span>
+                    <span class="hint" data-i18n-html="settings.hintFromAds">从 <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ADS</a> 获取</span>
                 </div>
                 <div class="settings-row">
                     <label for="deepseekKey">DeepSeek API Key</label>
                     <input type="password" id="deepseekKey" placeholder="输入你的 DeepSeek API Key" />
-                    <span class="hint">从 <a href="https://platform.deepseek.com/api_keys" target="_blank">这里获取</a></span>
+                    <span class="hint" data-i18n-html="settings.hintFromDs">从 <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek</a> 获取</span>
                 </div>
-                <button id="saveSettingsBtn" disabled>保存设置</button>
+                <button id="saveSettingsBtn" data-i18n="settings.save" disabled>保存设置</button>
                 <div class="settings-extra">
-                    <button id="clearCacheBtn">🧹 清除所有缓存</button>
+                    <button id="clearCacheBtn" data-i18n-html="settings.clear">清除搜索缓存（保留密钥）</button>
+                    <button id="resetTutorialBtn" data-i18n="settings.resetTutorial">重置引导</button>
                 </div>
             </div>
 
-            <!-- 常用搜索（动态） -->
-            <div class="preset-keywords" id="presetContainer">
-                <span class="preset-label">常用搜索：</span>
-                <div id="keywordList" class="keyword-list"></div>
-                <button class="add-keyword-btn" id="addKeywordBtn">＋</button>
-            </div>
-
-            <!-- 搜索栏 -->
+            <!-- 搜索栏（主入口放最前） -->
             <div class="search-box">
-                <input type="text" id="keyword" placeholder="输入关键词，如 hubble tension" />
-                <button id="searchBtn">搜索</button>
-                <button id="updateBtn" class="update-btn" title="强制更新当前关键词的综述">🔄 更新</button>
+                <input type="text" id="keyword" data-i18n-placeholder="search.placeholder" placeholder="输入关键词，如 hubble tension" />
+                <button id="searchBtn" data-i18n="search.btn">搜索</button>
+                <button id="updateBtn" class="update-btn" data-i18n-title="update.title" title="强制更新当前关键词的综述">更新</button>
             </div>
 
-            <div id="status" class="status">✦ 输入关键词或点击常用搜索开始探索</div>
+            <!-- 常用搜索（作为搜索栏下方的快捷提示） -->
+            <div class="preset-keywords" id="presetContainer">
+                <span class="preset-label" data-i18n="preset.label">常用搜索：</span>
+                <div id="keywordList" class="keyword-list"></div>
+                <button class="add-keyword-btn" id="addKeywordBtn"></button>
+            </div>
+
+            <div id="status" class="status">输入关键词或点击常用搜索开始探索</div>
             <div id="results"></div>
-            <div class="footer">懒人不想走路，于是发明了轮子</div>
+            <div class="footer" data-i18n="footer">懒人不想走路，于是发明了轮子</div>
         </div>
 
         <!-- 右侧面板 -->
         <div id="sidePanel" class="side-panel">
             <div class="side-panel-wrapper">
                 <div class="panel-header">
-                    <h2 class="panel-title">📘 详情</h2>
-                    <button class="close-btn" onclick="closeSidePanel()">✕</button>
+                    <h2 class="panel-title" id="panelTitle" data-i18n="detail.title">详情</h2>
+                    <button class="close-btn" onclick="closeSidePanel()" title=""></button>
                 </div>
                 <div id="panelContent" class="content"></div>
             </div>
@@ -1057,30 +1494,30 @@
     <!-- ===== 引导模板（隐藏） ===== -->
     <div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
         <div class="tutorial-card">
-            <h2>👋 欢迎使用「今日天文学」</h2>
-            <p>几分钟带你快速上手</p>
+            <h2 class="tutorial-title" data-i18n-html="tutorial.title">欢迎使用 <img class="title-icon" src="/static/galaxy-2-solid.svg" alt=""> AstroMind</h2>
+            <p data-i18n="tutorial.sub">几分钟带你快速上手</p>
             <div class="tutorial-step active" data-step="1">
-                <div><span class="step-num">1</span> 设置 API 密钥</div>
+                <div><span class="step-num">1</span><span data-i18n="tutorial.step1Title">设置 API 密钥</span></div>
                 <ul>
-                    <li>点击「⚙️ API 设置」展开面板</li>
-                    <li>粘贴你的 <strong>ADS Token</strong> 和 <strong>DeepSeek API Key</strong></li>
-                    <li>点击「保存设置」</li>
+                    <li data-i18n-html="tutorial.step1a">点击「API 设置」展开面板</li>
+                    <li data-i18n-html="tutorial.step1b">粘贴你的 <strong>ADS Token</strong> 和 <strong>DeepSeek API Key</strong></li>
+                    <li data-i18n="tutorial.step1c">点击「保存设置」</li>
                 </ul>
             </div>
             <div class="tutorial-step" data-step="2">
-                <div><span class="step-num">2</span> 搜索关键词</div>
+                <div><span class="step-num">2</span><span data-i18n="tutorial.step2Title">搜索关键词</span></div>
                 <ul>
-                    <li>在搜索框输入你感兴趣的天文学话题</li>
-                    <li>或点击「常用搜索」快捷标签</li>
-                    <li>等待 AI 生成综述</li>
+                    <li data-i18n="tutorial.step2a">在搜索框输入你感兴趣的天文学话题</li>
+                    <li data-i18n="tutorial.step2b">或点击「常用搜索」快捷标签</li>
+                    <li data-i18n="tutorial.step2c">等待 AI 生成研究介绍与论文分类</li>
                 </ul>
             </div>
             <div class="tutorial-step" data-step="3">
-                <div><span class="step-num">3</span> 深入阅读</div>
+                <div><span class="step-num">3</span><span data-i18n="tutorial.step3Title">深入阅读</span></div>
                 <ul>
-                    <li>引用论文的段落会有「📖 查看详情」按钮</li>
-                    <li>点击后右侧会展开详细分析</li>
-                    <li>支持数学公式渲染，可点击论文链接跳转</li>
+                    <li data-i18n-html="tutorial.step3a">点击「查看详情」查看每篇论文的总结、扩展分析与综合比较</li>
+                    <li data-i18n-html="tutorial.step3b">点击「跨领域连接」获取跨学科方法迁移建议</li>
+                    <li data-i18n="tutorial.step3c">点击「更新」可重新生成介绍</li>
                 </ul>
             </div>
             <div class="tutorial-dots">
@@ -1089,8 +1526,9 @@
                 <span data-dot="3"></span>
             </div>
             <div class="tutorial-actions">
-                <button class="btn-secondary" id="tutorialSkip">跳过</button>
-                <button class="btn-primary" id="tutorialNext">下一步 →</button>
+                <button class="btn-secondary" id="tutorialSkip" data-i18n="tutorial.skip">跳过</button>
+                <button class="btn-primary" id="tutorialPrev" data-i18n="tutorial.prev" style="display:none;">← 上一页</button>
+                <button class="btn-primary" id="tutorialNext" data-i18n="tutorial.next">下一步 →</button>
             </div>
         </div>
     </div>
@@ -1104,14 +1542,456 @@
         var updateBtn = document.getElementById('updateBtn');
         var statusDiv = document.getElementById('status');
         var resultsDiv = document.getElementById('results');
+        var panelTitle = document.getElementById('panelTitle');
+
+        // ===== 国际化（中/英） =====
+        var lang = getLocal('lang') || 'zh';
+
+        // ===== 抽象风格 SVG 小图标（线条风格，颜色跟随文字，风格统一） =====
+        // 用 svgLine/svgSolid 生成器复用公共属性，图标只写内部图形，输出与展开写法完全一致
+        var ICONS = (function() {
+            var ATTRS = 'viewBox="0 0 24 24" width="1em" height="1em" class="ico"';
+            function line(inner) {
+                return '<svg ' + ATTRS + ' fill="none" stroke="currentColor" stroke-width="1.8" ' +
+                    'stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+            }
+            function solid(inner) {
+                return '<svg ' + ATTRS + ' fill="currentColor" stroke="none">' + inner + '</svg>';
+            }
+            return {
+                search: line('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+                refresh: line('<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 3.5V8h-4.5"/>'),
+                stop: solid('<rect x="6" y="6" width="12" height="12" rx="2.5"/>'),
+                check: line('<path d="M4.5 12.5l5 5L19.5 6.5"/>'),
+                warn: line('<path d="M12 3.5L2.8 20h18.4L12 3.5z"/><path d="M12 9.5v4.5"/><path d="M12 17.2h.01"/>'),
+                error: line('<circle cx="12" cy="12" r="9"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/>'),
+                empty: line('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-13z"/><path d="M4 13.5h5l1.8 2.5h2.4L15 13.5h5"/>'),
+                detail: line('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+                connect: line('<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'),
+                folder: line('<path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>'),
+                gear: line('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
+                globe: line('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.7 2.7 4 6 4 9s-1.3 6.3-4 9c-2.7-2.7-4-6-4-9s1.3-6.3 4-9z"/>'),
+                clear: line('<path d="M4 7h16"/><path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2"/><path d="M6.5 7l1 13h9l1-13"/>'),
+                star: line('<path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3.5z"/>'),
+                welcome: line('<path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/><path d="M18.5 4.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>'),
+                plus: line('<path d="M12 5v14M5 12h14"/>'),
+                close: line('<path d="M6 6l12 12M18 6L6 18"/>')
+            };
+        })();
+        function iconHtml(name) {
+            return ICONS[name] || '';
+        }
+        // 状态栏图标映射（按状态 key 配图标）
+        var STATUS_ICONS = {
+            'status.initial': 'star',
+            'status.searching': 'search',
+            'status.done': 'check',
+            'status.doneCache': 'check',
+            'status.doneLocal': 'check',
+            'status.noKeyword': 'warn',
+            'status.noKeys': 'warn',
+            'status.badToken': 'warn',
+            'status.badKey': 'warn',
+            'status.noPapers': 'empty',
+            'status.error': 'error',
+            'status.cancelled': 'stop',
+            'status.stopping': 'stop',
+            'status.noCache': 'empty',
+            'status.noCache2': 'empty',
+            'status.translating': 'refresh'
+        };
+        function statusHtml(key, text) {
+            return iconHtml(STATUS_ICONS[key] || '') + (text ? ' ' + text : '');
+        }
+        var I18N = {
+            zh: {
+                'lang.title': '切换语言',
+                'alpha.title': 'A测版本',
+                'brand.poweredBy': 'powered by',
+                'search.placeholder': '输入关键词，如 hubble tension',
+                'search.btn': '搜索',
+                'update.btn': '更新',
+                'stop.btn': '停止',
+                'update.title': '强制更新当前关键词的综述',
+                'preset.label': '常用搜索：',
+                'addKeyword.placeholder': '输入关键词...',
+                'kw.exists': '该关键词已存在。',
+                'kw.emptyAlert': '请先输入或搜索一个关键词。',
+                'settings.title': 'API 设置',
+                'settings.save': '保存设置',
+                'settings.saved': '已保存',
+                'settings.clear': ICONS.clear + ' 清除搜索缓存（保留密钥）',
+                'settings.clearConfirm': '确定要清除搜索与详情缓存吗？\n（ADS Token、DeepSeek API Key 和常用关键词会保留）',
+                'settings.needOne': '请至少输入一项密钥',
+                'settings.hintFromAds': '从 <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ADS</a> 获取',
+                'settings.hintFromDs': '从 <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek</a> 获取',
+                'settings.resetTutorial': '重置引导',
+                'status.initial': '输入关键词或点击常用搜索开始探索',
+                'status.searching': '正在搜索 "{0}"...',
+                'status.done': '共搜索到最近5年的{0}篇相关论文，介绍已生成',
+                'status.doneCache': '共搜索到最近5年的{0}篇相关论文，介绍已生成（来自缓存）',
+                'status.doneLocal': '共搜索到最近5年的{0}篇相关论文，介绍已生成（来自本地缓存）',
+                'status.noKeyword': '请输入关键词',
+                'status.noKeys': '请先在 API 设置中填写 ADS Token 和 DeepSeek API Key',
+                'status.badToken': 'ADS Token 无效，请检查 API 设置中的 Token',
+                'status.badKey': 'DeepSeek API Key 无效，请检查 API 设置中的 Key',
+                'status.noPapers': '未找到与 “{0}” 相关的论文，请尝试其他关键词',
+                'net.retry': '与 DeepSeek 的连接中断，已自动重试仍失败。请检查网络后稍等片刻再试，或到 DeepSeek 官网确认服务状态。',
+                'status.error': '{0}',
+                'status.cancelled': '搜索已取消',
+                'status.stopping': '正在停止...',
+                'status.noCache': '暂无缓存，点击“更新”按钮生成 “{0}” 的介绍。',
+                'status.noCache2': '暂无缓存，点击“更新”按钮生成介绍。',
+                'status.translating': '正在将内容翻译为{0}...',
+                'status.loadingText': '正在检索文献并生成介绍…',
+                'status.emptyHint': '输入关键词或点击常用搜索，让 AI 为你生成研究介绍',
+                'lang.zh': '中文',
+                'lang.en': '英文',
+                'connect.btn': '跨领域连接',
+                'connect.generating': '生成中...',
+                'connect.title': '跨领域连接',
+                'connect.loading': '正在寻找跨领域连接...',
+                'connect.empty': '没有可分析的困难条目。',
+                'connect.essence': '抽象本质',
+                'connect.solution': '解决方式：',
+                'connect.why': '结构相似性：',
+                'connect.migration': '迁移预期',
+                'connect.summary': '总体结论',
+                'connect.noSearch': '请先搜索一个关键词',
+                'connect.noKey': '请先在 API 设置中填写 DeepSeek API Key',
+                'connect.pool': '候选池：{0} 个候选 · 覆盖 {1}',
+                'connect.score.isomorphism': '同构',
+                'connect.score.maturity': '成熟',
+                'connect.score.convenience': '便利',
+                'connect.score.payoff': '收益',
+                'connect.score.total': '总分',
+                'connect.rationale': '入选理由（为何优于邻近学科）：',
+                'connect.verify': '验证路径：',
+                'detail.title': '详情',
+                'detail.btn': '查看详情',
+                'detail.loading': '正在生成详情，请稍候...',
+                'detail.noRefs': '该段落未引用具体论文。',
+                'detail.noMatch': '未找到匹配的论文。',
+                'detail.netErr': '网络错误: {0}',
+                'detail.meta': '（{0}，引用数：{1}）',
+                'detail.metaNoJournal': '（引用数：{0}）',
+                'detail.summary': '总结',
+                'detail.analysis': '扩展分析',
+                'detail.comparison': '综合比较',
+                'category.count': '（{0}篇）',
+                'category.empty': '暂无分类数据',
+                'footer': '懒人不想走路，于是发明了轮子',
+                'tutorial.title': '欢迎使用 <img class="title-icon" src="/static/galaxy-2-solid.svg" alt=""> <span class="astro">Astro</span><span class="mind">Mind</span>',
+                'tutorial.sub': '几分钟带你快速上手',
+                'tutorial.step1Title': '设置 API 密钥',
+                'tutorial.step1a': '点击「' + ICONS.gear + ' API 设置」展开面板',
+                'tutorial.step1b': '粘贴你的 <strong>ADS Token</strong> 和 <strong>DeepSeek API Key</strong>',
+                'tutorial.step1c': '点击「保存设置」',
+                'tutorial.step2Title': '搜索关键词',
+                'tutorial.step2a': '在搜索框输入你感兴趣的天文学话题',
+                'tutorial.step2b': '或点击「常用搜索」快捷标签',
+                'tutorial.step2c': '等待 AI 生成研究介绍与论文分类',
+                'tutorial.step3Title': '深入阅读',
+                'tutorial.step3a': '点击「' + ICONS.detail + ' 查看详情」查看每篇论文的总结、扩展分析与综合比较',
+                'tutorial.step3b': '点击「' + ICONS.connect + ' 跨领域连接」获取跨学科方法迁移建议',
+                'tutorial.step3c': '点击「更新」可重新生成介绍',
+                'tutorial.skip': '跳过',
+                'tutorial.next': '下一步 →',
+                'tutorial.finish': '完成',
+                'tutorial.prev': '← 上一页',
+            },
+            en: {
+                'lang.title': 'Switch language',
+                'alpha.title': 'Alpha build',
+                'brand.poweredBy': 'powered by',
+                'search.placeholder': 'Enter a keyword, e.g. hubble tension',
+                'search.btn': 'Search',
+                'update.btn': 'Refresh',
+                'stop.btn': 'Stop',
+                'update.title': 'Force-refresh the review for the current keyword',
+                'preset.label': 'Presets:',
+                'addKeyword.placeholder': 'Type a keyword...',
+                'kw.exists': 'This keyword already exists.',
+                'kw.emptyAlert': 'Enter or search a keyword first.',
+                'settings.title': 'API Settings',
+                'settings.save': 'Save settings',
+                'settings.saved': 'Saved',
+                'settings.clear': ICONS.clear + ' Clear search cache (keep keys)',
+                'settings.clearConfirm': 'Clear search & detail caches?\n(ADS Token, DeepSeek API Key and custom keywords are kept)',
+                'settings.needOne': 'Enter at least one key',
+                'settings.hintFromAds': 'get it from <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ADS</a>',
+                'settings.hintFromDs': 'get it from <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek</a>',
+                'settings.resetTutorial': 'Reset tutorial',
+                'status.initial': 'Enter a keyword or tap a preset to start',
+                'status.searching': 'Searching "{0}"...',
+                'status.done': 'Found {0} related papers from the last 5 years; introduction generated',
+                'status.doneCache': 'Found {0} related papers from the last 5 years; introduction generated (cached)',
+                'status.doneLocal': 'Found {0} related papers from the last 5 years; introduction generated (local cache)',
+                'status.noKeyword': 'Please enter a keyword',
+                'status.noKeys': 'Add your ADS Token and DeepSeek API Key in API Settings first',
+                'status.badToken': 'Invalid ADS Token — check it in API Settings',
+                'status.badKey': 'Invalid DeepSeek API Key — check it in API Settings',
+                'status.noPapers': 'No papers found for "{0}" — try another keyword',
+                'net.retry': 'Connection to DeepSeek was interrupted and retries failed. Check your network and try again shortly.',
+                'status.error': '{0}',
+                'status.cancelled': 'Search cancelled',
+                'status.stopping': 'Stopping...',
+                'status.noCache': 'No cache yet — click "Refresh" to generate "{0}".',
+                'status.noCache2': 'No cache yet — click "Refresh" to generate the introduction.',
+                'status.translating': 'Translating content to {0}...',
+                'status.loadingText': 'Searching the literature and generating the introduction…',
+                'status.emptyHint': 'Enter a keyword or tap a preset to have AI generate a research introduction',
+                'lang.zh': 'Chinese',
+                'lang.en': 'English',
+                'connect.btn': 'Cross-field connections',
+                'connect.generating': 'Generating...',
+                'connect.title': 'Cross-field Connections',
+                'connect.loading': 'Finding cross-field connections...',
+                'connect.empty': 'No specific difficulties to analyze.',
+                'connect.essence': 'Abstract essence',
+                'connect.solution': 'Solution: ',
+                'connect.why': 'Structural similarity: ',
+                'connect.migration': 'Expected outcome of migration',
+                'connect.summary': 'Overall assessment',
+                'connect.noSearch': 'Search a keyword first',
+                'connect.noKey': 'Add your DeepSeek API Key in API Settings first',
+                'connect.pool': 'Candidate pool: {0} candidates · covering {1}',
+                'connect.score.isomorphism': 'Iso',
+                'connect.score.maturity': 'Maturity',
+                'connect.score.convenience': 'Ease',
+                'connect.score.payoff': 'Payoff',
+                'connect.score.total': 'Total',
+                'connect.rationale': 'Why over adjacent fields: ',
+                'connect.verify': 'Verification path: ',
+                'detail.title': 'Details',
+                'detail.btn': 'Details',
+                'detail.loading': 'Generating details, please wait...',
+                'detail.noRefs': 'This paragraph does not cite any paper.',
+                'detail.noMatch': 'No matching papers found.',
+                'detail.netErr': 'Network error: {0}',
+                'detail.meta': ' ({0}, citations: {1})',
+                'detail.metaNoJournal': ' (citations: {0})',
+                'detail.summary': 'Summary',
+                'detail.analysis': 'Extended analysis',
+                'detail.comparison': 'Overall comparison',
+                'category.count': ' ({0} papers)',
+                'category.empty': 'No categories yet',
+                'footer': 'Not wanting to walk, the lazy invented the wheel.',
+                'tutorial.title': 'Welcome to <img class="title-icon" src="/static/galaxy-2-solid.svg" alt=""> <span class="astro">Astro</span><span class="mind">Mind</span>',
+                'tutorial.sub': 'Get started in a few minutes',
+                'tutorial.step1Title': 'Set up API keys',
+                'tutorial.step1a': 'Click "' + ICONS.gear + ' API Settings" to open the panel',
+                'tutorial.step1b': 'Paste your <strong>ADS Token</strong> and <strong>DeepSeek API Key</strong>',
+                'tutorial.step1c': 'Click "Save settings"',
+                'tutorial.step2Title': 'Search a keyword',
+                'tutorial.step2a': 'Type an astronomy topic in the search box',
+                'tutorial.step2b': 'Or tap a preset keyword below the search box',
+                'tutorial.step2c': 'Wait for the AI to generate the introduction and paper categories',
+                'tutorial.step3Title': 'Dive deeper',
+                'tutorial.step3a': 'Click "' + ICONS.detail + ' Details" to see each paper summary, extended analysis and overall comparison',
+                'tutorial.step3b': 'Click "' + ICONS.connect + ' Cross-field connections" for cross-discipline insights',
+                'tutorial.step3c': 'Click "Refresh" to regenerate the introduction',
+                'tutorial.skip': 'Skip',
+                'tutorial.next': 'Next →',
+                'tutorial.finish': 'Finish',
+                'tutorial.prev': '← Previous',
+            }
+        };
+
+        // 取当前语言文案；支持 {0} {1} 占位符替换
+        function t(key) {
+            var entry = (I18N[lang] && I18N[lang][key]);
+            if (entry === undefined) entry = I18N.zh[key];
+            if (entry === undefined) entry = key;
+            var args = Array.prototype.slice.call(arguments, 1);
+            for (var i = 0; i < args.length; i++) {
+                entry = entry.split('{' + i + '}').join(args[i]);
+            }
+            return entry;
+        }
+
+        // 应用当前语言到所有带 data-i18n 标记的元素
+        function applyI18n() {
+            document.querySelectorAll('[data-i18n]').forEach(function(el) {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+                el.innerHTML = t(el.getAttribute('data-i18n-html'));
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+                el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+                el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+            });
+            var langBtnEl = document.getElementById('langBtn');
+            if (langBtnEl) langBtnEl.innerHTML = iconHtml('globe') + '<span id="langLabel">' + (lang === 'zh' ? '中' : 'EN') + '</span>';
+            var settingsToggleEl = document.getElementById('settingsToggle');
+            if (settingsToggleEl) settingsToggleEl.innerHTML = iconHtml('gear');
+            var addKwEl = document.getElementById('addKeywordBtn');
+            if (addKwEl) addKwEl.innerHTML = iconHtml('plus');
+            var closeBtnEl = document.querySelector('.panel-header .close-btn');
+            if (closeBtnEl) closeBtnEl.innerHTML = iconHtml('close');
+            if (!isSearching) {
+                updateBtn.innerHTML = iconHtml('refresh') + ' ' + t('update.btn');
+            } else {
+                updateBtn.innerHTML = iconHtml('stop') + ' ' + t('stop.btn');
+            }
+            var searchBtnEl = document.getElementById('searchBtn');
+            if (searchBtnEl) searchBtnEl.innerHTML = iconHtml('search') + ' ' + t('search.btn');
+            // 状态栏（首次加载、尚无状态时）与 CSS 变量文案
+            if (!lastStatus.key) {
+                statusDiv.innerHTML = statusHtml('status.initial', t('status.initial'));
+            }
+            document.documentElement.style.setProperty('--loading-text', '"' + t('status.loadingText') + '"');
+            document.documentElement.style.setProperty('--empty-hint', '"' + t('status.emptyHint') + '"');
+            // 面板标题：连接模式下覆盖默认「详情」标题
+            if (panelTitle) {
+                if (panelType === 'connect') {
+                    panelTitle.innerHTML = iconHtml('connect') + ' ' + t('connect.title');
+                } else {
+                    panelTitle.innerHTML = iconHtml('detail') + ' ' + t('detail.title');
+                }
+            }
+        }
+
+        function toggleLang() {
+            var newLang = (lang === 'zh') ? 'en' : 'zh';
+            if (isTranslating) return;   // 翻译进行中，忽略重复点击
+            // 连接面板内容不随语言切换（内容为 AI 生成），切语言时先关闭
+            if (panelType === 'connect' && sidePanel.classList.contains('open')) {
+                closeSidePanel();
+            }
+            // 已有生成内容且语言与目标不一致 → 先查目标语言缓存，有则直接切换（省一次翻译调用）
+            if (lastSearchData && contentLang !== newLang) {
+                var cachedOtherLang = getLocal('searchResult_v2_' + newLang + '_' + currentKeyword);
+                if (cachedOtherLang) {
+                    // 目标语言版本已存在（之前生成或翻译过）：零成本切换
+                    lang = newLang;
+                    setLocal('lang', lang);
+                    contentLang = newLang;
+                    applyI18n();
+                    searchCache[currentKeyword] = cachedOtherLang;
+                    displayResults(cachedOtherLang);
+                    var totalCached = cachedOtherLang.papers ? cachedOtherLang.papers.length : 0;
+                    sayStatus('status.doneCache', [totalCached], 'success');
+                    if (sidePanel.classList.contains('open') && currentDetailIndex !== null) {
+                        var ck2 = 'detail_v8_' + lang + '_' + currentKeyword + '_' + currentDetailIndex;
+                        var ctx2 = detailCtxCache[ck2];
+                        if (ctx2) {
+                            panelContent.innerHTML = formatPaperSummaries(ctx2.paperData, ctx2.papers, ctx2.comparison);
+                            renderMath();
+                        }
+                    }
+                    return;
+                }
+                translateCurrentContent(newLang);
+                return;
+            }
+            // 无内容或内容语言已匹配：直接切换界面语言
+            lang = newLang;
+            setLocal('lang', lang);
+            applyI18n();
+            if (lastStatus.key) {
+                setStatus(statusHtml(lastStatus.key, t.apply(null, [lastStatus.key].concat(lastStatus.args))), lastStatus.type);
+            }
+            if (lastSearchData) {
+                displayResults(lastSearchData);
+            }
+            if (sidePanel.classList.contains('open') && currentDetailIndex !== null) {
+                var ck = 'detail_v8_' + lang + '_' + currentKeyword + '_' + currentDetailIndex;
+                var ctx = detailCtxCache[ck];
+                if (ctx) {
+                    panelContent.innerHTML = formatPaperSummaries(ctx.paperData, ctx.papers, ctx.comparison);
+                    renderMath();
+                }
+            }
+        }
+
+        // 调用 AI 把当前已生成的内容（综述 + 分类名）翻译成目标语言；
+        // 详情卡片（原文+逐字翻译）不在这里二次翻译，切换后由 reloadDetailInLang 按新语言重新请求
+        function translateCurrentContent(newLang) {
+            isTranslating = true;
+            var targetName = t(newLang === 'zh' ? 'lang.zh' : 'lang.en');
+            sayStatus('status.translating', [targetName], 'loading');
+
+            var headers = {
+                'Content-Type': 'application/json',
+                'X-DeepSeek-Key': getLocal('deepseekKey') || ''
+            };
+            var payload = { lang: newLang, overview: lastSearchData.overview || '' };
+            if (lastSearchData.categories) {
+                payload.categories = lastSearchData.categories.map(function(c) {
+                    return { name: c.name, papers: (c.papers || []) };
+                });
+            }
+
+            fetch('/translate', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        sayStatus('status.error', [data.error], 'error');
+                        return;
+                    }
+                    // 切换语言并应用
+                    lang = newLang;
+                    setLocal('lang', lang);
+                    contentLang = newLang;
+                    applyI18n();
+
+                    // 重建搜索结果：分类名替换，papers 与链接信息保留
+                    var updated = {
+                        overview: data.overview || lastSearchData.overview,
+                        categories: (lastSearchData.categories || []).map(function(c, i) {
+                            var nc = JSON.parse(JSON.stringify(c));
+                            if (data.category_names && data.category_names[i]) {
+                                nc.name = data.category_names[i];
+                            }
+                            return nc;
+                        }),
+                        papers: lastSearchData.papers
+                    };
+                    searchCache[currentKeyword] = updated;
+                    setLocal('searchResult_v2_' + lang + '_' + currentKeyword, updated);
+                    displayResults(updated);
+
+                    // 详情面板：按新语言重新请求逐字翻译（有缓存则直接展示）
+                    if (sidePanel.classList.contains('open') && panelType === 'paper') {
+                        reloadDetailInLang(newLang);
+                    }
+
+                    sayStatus('status.done', [updated.papers.length], 'success');
+                })
+                .catch(function(err) {
+                    sayStatus('status.error', [err.message], 'error');
+                })
+                .finally(function() {
+                    isTranslating = false;
+                });
+        }
 
         // ===== 缓存 =====
         var searchCache = {};
         var currentPapers = [];
-        var currentOverview = '';
+        var currentParagraphs = [];   // 解析后的综述段落（供展示与详情共用）
         var detailCache = {};
+        var detailCtxCache = {};      // 详情原始文本缓存（用于语言切换后重渲染）
         var currentDetailIndex = null;
+        var currentDetailPapers = [];   // 当前打开详情的论文列表（语言切换后重新请求翻译用）
+        var currentDetailTopic = '';    // 当前打开详情的段落主题
         var currentKeyword = '';
+        var lastSearchData = null;    // 最近一次渲染的搜索结果（语言切换时重渲染用）
+        var lastStatus = { key: '', args: [], type: '' };
+        var contentLang = '';         // 当前内容的语言（'zh'/'en'），用于判断切换时是否需要翻译
+        var isTranslating = false;    // 翻译进行中标记
+        var panelType = 'paper';      // 右侧面板类型：'paper'（论文详情）或 'connect'（跨领域连接）
+        var connectCache = {};        // 已生成的跨领域连接报告缓存：{段落索引: {report, pool, keyword}}，新搜索/更新后清空
+        var connectBusyIdx = null;    // 正在生成连接报告的段落索引（null=当前无生成中），用于生成期间自由切换面板
+        var currentConnectIdx = null; // 当前连接面板对应的段落索引
 
         // ===== 搜索控制 =====
         var isSearching = false;
@@ -1167,7 +2047,7 @@
 
                 var delBtn = document.createElement('button');
                 delBtn.className = 'delete-btn';
-                delBtn.innerHTML = '×';
+                delBtn.innerHTML = iconHtml('close');
                 delBtn.setAttribute('aria-label', '删除');
                 delBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -1198,7 +2078,7 @@
             var input = document.createElement('input');
             input.type = 'text';
             input.className = 'add-keyword-input';
-            input.placeholder = '输入关键词...';
+            input.placeholder = t('addKeyword.placeholder');
             input.autofocus = true;
             addBtn.parentNode.insertBefore(input, addBtn);
             input.focus();
@@ -1215,7 +2095,7 @@
                     var keywords = getKeywords();
                     var exists = keywords.some(function(k) { return k.toLowerCase() === val.toLowerCase(); });
                     if (exists) {
-                        alert('该关键词已存在。');
+                        alert(t('kw.exists'));
                         return;
                     }
                     keywords.push(val);
@@ -1258,79 +2138,209 @@
                 var adsToken = adsInput.value.trim();
                 var deepseekKey = dskInput.value.trim();
                 if (!adsToken && !deepseekKey) {
-                    alert('请至少输入一项密钥');
+                    alert(t('settings.needOne'));
                     return;
                 }
                 setLocal('adsToken', adsToken);
                 setLocal('deepseekKey', deepseekKey);
                 saveBtn.disabled = true;
                 var originalText = saveBtn.textContent;
-                saveBtn.textContent = '✅ 已保存';
+                saveBtn.textContent = t('settings.saved');
                 setTimeout(function() {
                     saveBtn.textContent = originalText;
                 }, 2000);
             });
 
-            // 清除所有缓存
+            // 清除搜索/详情缓存（保留 API 密钥、自定义关键词与引导进度）
             clearBtn.addEventListener('click', function() {
-                if (confirm('确定要清除所有缓存数据吗？\n（包括搜索记录和详情缓存）')) {
-                    localStorage.clear();
+                if (confirm(t('settings.clearConfirm'))) {
+                    var keysToRemove = [];
+                    for (var i = 0; i < localStorage.length; i++) {
+                        var key = localStorage.key(i);
+                        if (key && (key.indexOf('searchResult_') === 0 || key.indexOf('detail_') === 0)) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(function(k) { removeLocal(k); });
+                    searchCache = {};
+                    detailCache = {};
                     location.reload();
                 }
             });
+
+            // 重置引导：清除"已看过"标记，关闭设置卡片后重新弹出页面导引
+            var resetTutorialBtn = document.getElementById('resetTutorialBtn');
+            if (resetTutorialBtn) {
+                resetTutorialBtn.addEventListener('click', function() {
+                    removeLocal('hasSeenTutorial');
+                    document.getElementById('settingsPanel').style.display = 'none';
+                    initTutorial();
+                });
+            }
 
             toggleSaveBtn();
         }
 
         // ===== 引导系统 =====
+        var tutorialBound = false;
+        var tutorialStep = 0;
+        var tutorialSteps = [];
+        var tutorialDots = [];
         function initTutorial() {
             var overlay = document.getElementById('tutorialOverlay');
-            if (getLocal('hasSeenTutorial')) {
-                overlay.style.display = 'none';
-                return;
-            }
-            overlay.style.display = 'flex';
+            if (!tutorialBound) {
+                tutorialBound = true;   // 监听只绑定一次，重置引导时只重新显示
 
-            var steps = document.querySelectorAll('.tutorial-step');
-            var dots = document.querySelectorAll('.tutorial-dots span');
-            var currentStep = 0;
+                tutorialSteps = Array.prototype.slice.call(document.querySelectorAll('.tutorial-step'));
+                tutorialDots = Array.prototype.slice.call(document.querySelectorAll('.tutorial-dots span'));
 
-            function goToStep(index) {
-                steps.forEach(function(el, i) {
-                    el.classList.toggle('active', i === index);
+                function goToStep(index) {
+                    tutorialSteps.forEach(function(el, i) {
+                        el.classList.toggle('active', i === index);
+                    });
+                    tutorialDots.forEach(function(el, i) {
+                        el.classList.toggle('active', i === index);
+                    });
+                    tutorialStep = index;
+                    // 最后一页时按钮显示「完成」，其它页显示「下一步」
+                    var nextBtn = document.getElementById('tutorialNext');
+                    if (nextBtn) {
+                        nextBtn.textContent = (index >= tutorialSteps.length - 1) ? t('tutorial.finish') : t('tutorial.next');
+                    }
+                    // 从第二页起显示「上一页」，第一页隐藏
+                    var prevBtn = document.getElementById('tutorialPrev');
+                    if (prevBtn) {
+                        prevBtn.style.display = (index > 0) ? '' : 'none';
+                    }
+                }
+                window._goTutorialStep = goToStep;
+
+                document.getElementById('tutorialNext').addEventListener('click', function() {
+                    if (tutorialStep < tutorialSteps.length - 1) {
+                        goToStep(tutorialStep + 1);
+                    } else {
+                        // 完成
+                        setLocal('hasSeenTutorial', true);
+                        overlay.style.display = 'none';
+                    }
                 });
-                dots.forEach(function(el, i) {
-                    el.classList.toggle('active', i === index);
-                });
-                currentStep = index;
-            }
 
-            document.getElementById('tutorialNext').addEventListener('click', function() {
-                if (currentStep < steps.length - 1) {
-                    goToStep(currentStep + 1);
-                } else {
-                    // 完成
+                document.getElementById('tutorialSkip').addEventListener('click', function() {
                     setLocal('hasSeenTutorial', true);
                     overlay.style.display = 'none';
-                }
-            });
+                });
 
-            document.getElementById('tutorialSkip').addEventListener('click', function() {
-                setLocal('hasSeenTutorial', true);
+                // 「上一页」按钮：回到上一页
+                document.getElementById('tutorialPrev').addEventListener('click', function() {
+                    if (tutorialStep > 0) {
+                        goToStep(tutorialStep - 1);
+                    }
+                });
+
+                // 点击底部圆点，跳转到对应页
+                tutorialDots.forEach(function(dot, i) {
+                    dot.addEventListener('click', function() {
+                        goToStep(i);
+                    });
+                });
+            }
+            // 已看过 → 隐藏；未看过或刚被重置 → 显示（重置后始终从第一页开始）
+            if (getLocal('hasSeenTutorial')) {
                 overlay.style.display = 'none';
-            });
+            } else {
+                window._goTutorialStep(0);
+                overlay.style.display = 'flex';
+            }
+        }
 
-            // 点击外部不关闭，只能通过按钮
+        // ===== 段落解析（供展示与详情共用，避免整段文字重复显示） =====
+        function deriveShortTitle(text) {
+            // 从正文提取短标题：取第一句（到句号/问号/感叹号），最长120字符
+            var m = text.match(/^(.{2,120}?)[。．！？.!?]/);
+            var t = m ? m[1] : '';
+            t = t.replace(/[:：\-–—,，\s]+$/g, '').trim();
+            if (t.length < 4) return '';
+            return t;
+        }
+
+        function parseParagraph(trimmed) {
+            var title = '';
+            var content = trimmed;
+            var titleMatch = trimmed.match(/^\*\*(.*?)\*\*/);
+            if (titleMatch) {
+                title = titleMatch[1].trim();
+                content = trimmed.replace(/^\*\*.*?\*\*/, '').trim();
+                // 注意：不要吞掉开头的「- 」项目符号（如「当前关键困难」的第一条 bullet），
+                // 只清理冒号/破折号/空白等标题分隔符
+                content = content.replace(/^[:：–—\s]+/, '');
+            } else {
+                var t = deriveShortTitle(trimmed);
+                if (t) {
+                    // 标题取自正文开头时，把该片段从正文中移除，避免上下重复
+                    var rest = trimmed.slice(t.length).replace(/^[。．！？.!?，,：:；;\s]+/, '').trim();
+                    // 若标题把整段正文都吃掉了（单句段落），放弃标题，保持正文完整
+                    if (rest.length >= 10) {
+                        title = t;
+                        content = rest;
+                    }
+                }
+            }
+            return { title: title, content: content };
+        }
+
+        function mergeParagraphs(rawParagraphs) {
+            // 整段只有 **小标题** 的段落（如 **观测进展**）与其后的正文段落合并，
+            // 避免出现“只有标题的空卡片”以及标题被重复显示。
+            var merged = [];
+            for (var i = 0; i < rawParagraphs.length; i++) {
+                var para = rawParagraphs[i].trim();
+                if (/^\*\*[^*]+\*\*$/.test(para)) {
+                    if (i + 1 < rawParagraphs.length) {
+                        merged.push(para + '\n' + rawParagraphs[i + 1].trim());
+                        i++;
+                        continue;
+                    }
+                    // 结尾孤立的纯标题段落：没有正文可合并，直接丢弃，避免空卡片
+                    continue;
+                }
+                merged.push(para);
+            }
+            return merged;
         }
 
         // ===== 详情面板 =====
+        // 切换右侧卡片类型（详情 ↔ 跨领域连接）：面板已打开时**原地替换**标题与内容，
+        // 面板宽度保持不变 → 左侧主框架位置不动、无闪烁；正反两个方向动画完全一致。
+        // targetType 预先设为目标面板类型，使 openFn 内部的类型分支不再命中（避免递归切换）。
+        function switchToPanel(openFn, targetType) {
+            if (!sidePanel.classList.contains('open')) { openFn(); return; }
+            panelType = targetType;
+            openFn();
+            panelContent.classList.remove('swap-in');   // 触发一次内容淡入，提示已切换
+            void panelContent.offsetWidth;
+            panelContent.classList.add('swap-in');
+        }
+
         function openSidePanel(topic, papers, paragraphIndex, btnElement) {
+            // 若右侧当前打开的是跨领域连接面板：原地切换为详情卡片（不收回，主框架不动）
+            if (panelType === 'connect' && sidePanel.classList.contains('open')) {
+                switchToPanel(function() { openSidePanel(topic, papers, paragraphIndex, btnElement); }, 'paper');
+                return;
+            }
+            panelType = 'paper';
+            currentConnectIdx = null;   // 切到详情时，连接面板不再对应任何段落（生成完成后不强行切回）
             if (currentDetailIndex === paragraphIndex && sidePanel.classList.contains('open')) {
                 closeSidePanel();
                 return;
             }
 
+            // 面板标题切回「详情」（跨领域连接面板会把标题改成「跨领域连接」）
+            panelTitle.innerHTML = iconHtml('detail') + ' ' + t('detail.title');
+
             document.querySelectorAll('.expand-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.connect-btn').forEach(function(btn) {
                 btn.classList.remove('active');
             });
             if (btnElement) {
@@ -1363,7 +2373,10 @@
                 }
             }, 500);
 
-            var cacheKey = 'detail_' + currentKeyword + '_' + paragraphIndex;
+            // v6 缓存键：详情卡片 = 每篇论文的原文摘要 + 逐字翻译，按语言区分
+            currentDetailPapers = papers;
+            currentDetailTopic = topic;
+            var cacheKey = 'detail_v8_' + lang + '_' + currentKeyword + '_' + paragraphIndex;
             var cachedData = getLocal(cacheKey);
             if (cachedData) {
                 panelContent.innerHTML = cachedData;
@@ -1377,67 +2390,18 @@
                 return;
             }
 
-            panelContent.innerHTML = '<div class="loading-text">⏳ 正在生成详情，请稍候...</div>';
-
-            var paperData = papers.map(function(p) {
-                return {
-                    title: p.title || '无标题',
-                    abstract: p.abstract || '无摘要',
-                    authors: p.authors || '',
-                    year: p.year || '',
-                    bibstem: p.bibstem || ''
-                };
-            });
-
-            var headers = {
-                'Content-Type': 'application/json',
-                'X-ADS-Token': getLocal('adsToken') || '',
-                'X-DeepSeek-Key': getLocal('deepseekKey') || ''
-            };
-
-            fetch('/expand', {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ topic: topic, papers: paperData })
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.error) {
-                        panelContent.innerHTML = '<div style="color:#FF6B6B;">❌ ' + data.error + '</div>';
-                    } else {
-                        var content = data.detailed_review;
-                        content = content.replace(/\*\*论文(\d+).*?\*\*/g, function(match, num) {
-                            var idx = parseInt(num) - 1;
-                            if (idx < 0 || idx >= papers.length) return match;
-                            var p = papers[idx];
-                            var firstAuthor = p.first_author || p.authors || 'Unknown';
-                            var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
-                            var year = p.year || '????';
-                            var citations = p.citations || 0;
-                            var bibstem = p.bibstem || '';
-                            var cleanBibstem = String(bibstem).split(/[,，\s]+/)[0] || '';
-                            var journalPart = cleanBibstem ? ' (' + cleanBibstem + '，引用数：' + citations + ')' :
-                                ' (引用数：' + citations + ')';
-                            return '**' + authorShort + ' et al. ' + year + journalPart + '**';
-                        });
-                        content = replacePaperRefs(content, papers);
-                        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        content = content.replace(/\n/g, '<br>');
-                        panelContent.innerHTML = content;
-                        detailCache[cacheKey] = content;
-                        setLocal(cacheKey, content);
-                        renderMath();
-                    }
-                })
-                .catch(function(err) {
-                    panelContent.innerHTML = '<div style="color:#FF6B6B;">❌ 网络错误: ' + err.message + '</div>';
-                });
+            fetchPaperDetail(cacheKey, topic, papers, paragraphIndex);
         }
 
         function closeSidePanel() {
             sidePanel.classList.remove('open');
             currentDetailIndex = null;
+            currentConnectIdx = null;
+            panelType = 'paper';
             document.querySelectorAll('.expand-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.connect-btn').forEach(function(btn) {
                 btn.classList.remove('active');
             });
         }
@@ -1452,20 +2416,303 @@
             }
         }
 
+        // ===== 详情正文排版：把小标题严格统一为「作者 et al. 年份（期刊，引用数：N）」 =====
+        function formatPaperHeader(num, papers) {
+            var idx = parseInt(num) - 1;
+            if (idx < 0 || idx >= papers.length) return null;
+            var p = papers[idx];
+            var firstAuthor = p.first_author || p.authors || 'Unknown';
+            var authorShort = String(firstAuthor).replace(/\s*et\s+al\.?$/i, '').trim();
+            // 只保留姓氏（去掉逗号后的名字缩写），例如 "Liu, X." -> "Liu"
+            authorShort = authorShort.split(',')[0].trim();
+            var year = p.year || '????';
+            var citations = p.citations || 0;
+            var bibstem = p.bibstem || '';
+            var cleanBibstem = String(bibstem).split(/[,，\s]+/)[0] || '';
+            var journalPart = cleanBibstem ? t('detail.meta', cleanBibstem, citations) :
+                t('detail.metaNoJournal', citations);
+            var authorYear = authorShort + ' et al. ' + year;
+            // 作者+年份保留 ADS 链接（无下划线），点击跳转论文页面
+            if (p.bibcode) {
+                authorYear = '<a href="https://ui.adsabs.harvard.edu/abs/' + p.bibcode +
+                    '" target="_blank">' + authorYear + '</a>';
+            }
+            return authorYear + '<span class="detail-meta">' + journalPart + '</span>';
+        }
+
+        // ===== 详情卡片：每篇论文 = 小标题 + 总结 + 扩展分析，最后是综合比较 =====
+        function formatPaperSummaries(paperData, papers, comparison) {
+            var html = '';
+            papers.forEach(function(p, i) {
+                var header = formatPaperHeader(i + 1, papers);
+                if (header === null) {
+                    header = '<strong class="detail-title">' + escapeHtml(p.title || ('Paper ' + (i + 1))) + '</strong>';
+                }
+                html += '<div class="detail-paper">';
+                html += '<div class="detail-title">' + header + '</div>';
+                var d = (paperData && paperData[i]) ? paperData[i] : {};
+                if (d.summary) {
+                    html += '<div class="detail-label">' + t('detail.summary') + '</div>';
+                    html += '<div class="detail-abstract">' + escapeHtml(mathify(d.summary)).replace(/\n/g, '<br>') + '</div>';
+                }
+                if (d.analysis) {
+                    html += '<div class="detail-label">' + t('detail.analysis') + '</div>';
+                    html += '<div class="detail-abstract">' + escapeHtml(mathify(d.analysis)).replace(/\n/g, '<br>') + '</div>';
+                }
+                html += '</div>';
+            });
+            if (comparison) {
+                var safeComparison = escapeHtml(mathify(comparison));
+                safeComparison = replacePaperRefs(safeComparison, papers);
+                html += '<div class="detail-comparison">';
+                html += '<div class="detail-title">' + t('detail.comparison') + '</div>';
+                html += '<div class="detail-abstract">' + safeComparison.replace(/\n/g, '<br>') + '</div>';
+                html += '</div>';
+            }
+            return html;
+        }
+
+        // 请求 /expand 获取每篇论文的总结/扩展分析与综合比较，渲染并缓存
+        function fetchPaperDetail(cacheKey, topic, papers, paragraphIndex) {
+            panelContent.innerHTML = '<div class="loading-text">' + iconHtml('refresh') + ' ' + t('detail.loading') + '</div>';
+
+            var paperData = papers.map(function(p) {
+                return {
+                    title: p.title || '无标题',
+                    abstract: p.abstract || '无摘要',
+                    authors: p.authors || '',
+                    year: p.year || '',
+                    bibstem: p.bibstem || ''
+                };
+            });
+            var headers = {
+                'Content-Type': 'application/json',
+                'X-DeepSeek-Key': getLocal('deepseekKey') || ''
+            };
+
+            fetch('/expand', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ topic: topic, papers: paperData, lang: lang })
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    // 面板守卫：只有当前仍显示该段落的详情时才写入内容，
+                    // 避免生成期间切到连接面板后，被迟到的 /expand 响应覆盖成错误提示
+                    var isCurrent = panelType === 'paper' && currentDetailIndex === paragraphIndex && sidePanel.classList.contains('open');
+                    if (data.error) {
+                        if (isCurrent) {
+                            panelContent.innerHTML = '<div style="color:#FF6B6B;">' + iconHtml('error') + ' ' + data.error + '</div>';
+                        }
+                    } else {
+                        var paperData = data.papers || [];
+                        var comparison = data.comparison || '';
+                        detailCtxCache[cacheKey] = { paperData: paperData, comparison: comparison, papers: papers, lang: lang };
+                        var content = formatPaperSummaries(paperData, papers, comparison);
+                        if (isCurrent) {
+                            panelContent.innerHTML = content;
+                            detailCache[cacheKey] = content;
+                            setLocal(cacheKey, content);
+                            renderMath();
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    if (panelType === 'paper' && currentDetailIndex === paragraphIndex && sidePanel.classList.contains('open')) {
+                        panelContent.innerHTML = '<div style="color:#FF6B6B;">' + iconHtml('error') + ' ' + t('detail.netErr', err.message) + '</div>';
+                    }
+                });
+        }
+
+        // 语言切换后：详情卡片按新语言重新请求总结（有缓存则直接展示）
+        function reloadDetailInLang(newLang) {
+            if (currentDetailIndex === null || !currentDetailPapers.length) return;
+            var cacheKey = 'detail_v8_' + newLang + '_' + currentKeyword + '_' + currentDetailIndex;
+            var cachedData = getLocal(cacheKey);
+            if (cachedData) {
+                panelContent.innerHTML = cachedData;
+                detailCache[cacheKey] = cachedData;
+                renderMath();
+                return;
+            }
+            var ctx = detailCtxCache[cacheKey];
+            if (ctx) {
+                panelContent.innerHTML = formatPaperSummaries(ctx.paperData, ctx.papers, ctx.comparison);
+                renderMath();
+                return;
+            }
+            fetchPaperDetail(cacheKey, currentDetailTopic || t('detail.title'), currentDetailPapers, currentDetailIndex);
+        }
+
+        // ===== 跨领域连接面板（他山之石，可以攻玉） =====
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 数学记号美化：把 H_0、σ_8、f_EDE、s^-1、10^5 等带上下标的记号包进 $...$（LaTeX 模式），
+        // 数学记号美化（LaTeX 模式）：
+        // 1) 上下标加花括号：f_esc → $f_{esc}$、H_0 → $H_{0}$、10^5 → $10^{5}$、s^-1 → $s^{-1}$
+        // 2) 关系符号与数值：≥0.2 → $≥0.2$、≈1.4 → $≈1.4$、z~11-6 → $z~11-6$、~0.5 → $~0.5$
+        // 注意：$ 不会被 escapeHtml 转义，先 mathify 再 escape 的顺序是安全的。
+        function mathify(text) {
+            var s = String(text || '');
+            // 0) 统一负号：U+2212(−)、长破折号 → ASCII 连字符，保证区间可被识别（如 z 11−6 → z 11-6）
+            s = s.replace(/[−–—]/g, '-');
+            // 1) 上下标加花括号：f_esc → $f_{esc}$、H_0 → $H_{0}$、10^5 → $10^{5}$、s^-1 → $s^{-1}$
+            s = s.replace(/(^|[^$\w])((?:\d+|\w|[\u0370-\u03ff])[\w\u0370-\u03ff]*[_^])\{?([\w\u0370-\u03ff-]{1,12})\}?/g, '$1$$$2{$3}$$');
+            // 2) 关系符号与数值：≥0.2、z>=10、R<0.5Rvir、z~11-6、≈1.4 等
+            s = s.replace(/(^|[^A-Za-z0-9_\u0370-\u03ff])([a-zA-Z\u0370-\u03ff]?\s*(?:>=|<=|!=|≥|≤|≈|≳|≲|∼|~|～|<|>)\s*[\d.]+(?:[-~]\s*[\d.]+)?[\w\u0370-\u03ff]*)/g, '$1$$$2$$');
+            // 3) 单字母变量 + 空格 + 数值/区间（如 z 0.1、z 11-6 → $z 0.1$、$z 11-6$）
+            s = s.replace(/(^|[^$\w])([a-zA-Z\u0370-\u03ff])\s+(\d+(?:[-~]\d+)?(?:\.\d+)?)/g, '$1$$$2 $3$$');
+            return s;
+        }
+
+        // 渲染连接报告（后端返回的 JSON：{sections:[{problem, essence, matches:[{field,concept,solution,why,scores,total,rationale,verify}], migration}], summary}）
+        // 先转义再替换「论文X」为作者链接（Liu et al. 2024），保证安全且引用可点击
+        function formatConnectText(text) {
+            if (!text) return '';
+            return escapeHtml(mathify(text)).replace(/论文(\d+)/g, function(match, num) {
+                var idx = parseInt(num) - 1;
+                if (idx >= 0 && idx < currentPapers.length) {
+                    var p = currentPapers[idx];
+                    var firstAuthor = p.first_author || p.authors || 'Unknown';
+                    var authorShort = String(firstAuthor).replace(/\s*et\s+al\.?$/i, '').trim();
+                    authorShort = authorShort.split(',')[0].trim();
+                    var year = p.year || '????';
+                    if (p.bibcode) {
+                        return '<a href="https://ui.adsabs.harvard.edu/abs/' + p.bibcode +
+                            '" target="_blank">' + authorShort + ' et al. ' + year + '</a>';
+                    }
+                    return authorShort + ' et al. ' + (p.year || '????');
+                }
+                return match;
+            });
+        }
+
+        function scoreChip(label, value, isTotal) {
+            if (value === undefined || value === null) return '';
+            return '<span class="score-chip' + (isTotal ? ' total' : '') + '">' + escapeHtml(label) +
+                ' <b>' + value + '</b></span>';
+        }
+
+        function formatConnectReport(data, pool) {
+            if (!data || typeof data !== 'object') {
+                return '<div style="color:#FF6B6B;">' + t('status.error', '解析失败') + '</div>';
+            }
+            var html = '';
+            // 候选池信息：展示搜索广度，增强可信度
+            if (pool && pool.count > 0) {
+                var fields = (pool.fields || []).join(' / ');
+                html += '<div class="connect-pool">' + iconHtml('search') + ' ' +
+                    t('connect.pool', pool.count, fields) + '</div>';
+            }
+            var sections = data.sections || [];
+            if (!sections.length) {
+                html += '<div style="color:rgba(255,255,255,0.55);">' + t('connect.empty') + '</div>';
+            }
+            sections.forEach(function(sec, i) {
+                html += '<div class="detail-title">' + (i + 1) + '. ' + formatConnectText(sec.problem || '') + '</div>';
+                if (sec.essence) {
+                    html += '<div class="connect-label">' + t('connect.essence') + '</div>';
+                    html += '<div class="connect-body">' + formatConnectText(sec.essence) + '</div>';
+                }
+                (sec.matches || []).forEach(function(m) {
+                    html += '<div class="connect-sub">' + formatConnectText(m.field || '') +
+                        (m.concept ? ' · ' + formatConnectText(m.concept) : '') + '</div>';
+
+                    // 计分区块紧跟在该跨领域项目的下一行
+                    if (m.scores) {
+                        var s = m.scores;
+                        html += '<div class="connect-scores">';
+                        html += scoreChip(t('connect.score.isomorphism'), s.isomorphism);
+                        html += scoreChip(t('connect.score.maturity'), s.maturity);
+                        html += scoreChip(t('connect.score.convenience'), s.convenience);
+                        html += scoreChip(t('connect.score.payoff'), s.payoff);
+                        if (m.total) html += scoreChip(t('connect.score.total'), m.total, true);
+                        html += '</div>';
+                    }
+                    if (m.solution) {
+                        html += '<div class="connect-body"><span class="connect-inline">' + t('connect.solution') +
+                            '</span>' + formatConnectText(m.solution) + '</div>';
+                    }
+                    if (m.why) {
+                        html += '<div class="connect-body"><span class="connect-inline">' + t('connect.why') +
+                            '</span>' + formatConnectText(m.why) + '</div>';
+                    }
+                    if (m.rationale) {
+                        html += '<div class="connect-rationale"><span class="connect-inline">' + t('connect.rationale') +
+                            '</span>' + formatConnectText(m.rationale) + '</div>';
+                    }
+                    if (m.verify) {
+                        html += '<div class="connect-verify"><span class="connect-inline">' + t('connect.verify') +
+                            '</span>' + formatConnectText(m.verify) + '</div>';
+                    }
+                });
+                if (sec.migration) {
+                    html += '<div class="connect-migration"><span class="connect-inline">' + t('connect.migration') +
+                        '</span>' + formatConnectText(sec.migration) + '</div>';
+                }
+            });
+            if (data.summary) {
+                html += '<div class="detail-title">' + t('connect.summary') + '</div>';
+                html += '<div class="connect-body">' + formatConnectText(data.summary) + '</div>';
+            }
+            return html;
+        }
+
+        // 打开跨领域连接面板（先显示加载态）；idx 为对应段落索引
+        function openConnectLoading(idx) {
+            // 若右侧当前打开的是论文详情卡片：原地切换为连接面板（不收回，主框架不动）
+            if (panelType === 'paper' && sidePanel.classList.contains('open')) {
+                switchToPanel(function() { openConnectLoading(idx); }, 'connect');
+                return;
+            }
+            panelType = 'connect';
+            currentDetailIndex = null;   // 连接面板不持有详情索引（避免语言切换时误重渲染详情）
+            currentConnectIdx = idx;
+            document.querySelectorAll('.expand-btn').forEach(function(b) { b.classList.remove('active'); });
+            panelTitle.innerHTML = iconHtml('connect') + ' ' + t('connect.title');
+            panelContent.innerHTML = '<div class="loading-text">' + iconHtml('refresh') + ' ' + t('connect.loading') + '</div>';
+            sidePanel.classList.add('open');
+            window.scrollTo({ left: document.documentElement.scrollWidth, behavior: 'smooth' });
+        }
+
+        // 展示连接报告（pool: {count, fields} 候选池信息）；idx 为对应段落索引
+        function openConnectPanel(report, title, pool, idx) {
+            // 若右侧当前打开的是论文详情卡片：原地切换为连接面板（不收回，主框架不动）
+            if (panelType === 'paper' && sidePanel.classList.contains('open')) {
+                switchToPanel(function() { openConnectPanel(report, title, pool, idx); }, 'connect');
+                return;
+            }
+            panelType = 'connect';
+            currentDetailIndex = null;   // 连接面板不持有详情索引（避免语言切换时误重渲染详情）
+            if (idx !== undefined) currentConnectIdx = idx;
+            document.querySelectorAll('.expand-btn').forEach(function(b) { b.classList.remove('active'); });
+            panelTitle.innerHTML = iconHtml('connect') + ' ' + (title || t('connect.title'));
+            panelContent.innerHTML = formatConnectReport(report, pool);
+            sidePanel.classList.add('open');
+            setTimeout(function() {
+                window.scrollTo({ left: document.documentElement.scrollWidth, behavior: 'smooth' });
+            }, 400);
+            renderMath();
+        }
+
         function replacePaperRefs(text, papers) {
             return text.replace(/论文(\d+)/g, function(match, num) {
                 var idx = parseInt(num) - 1;
                 if (idx >= 0 && idx < papers.length) {
                     var p = papers[idx];
+                    var firstAuthor = p.first_author || p.authors || 'Unknown';
+                    var authorShort = String(firstAuthor).replace(/\s*et\s+al\.?$/i, '').trim();
+                    // 只保留姓氏，与详情小标题格式保持一致
+                    authorShort = authorShort.split(',')[0].trim();
+                    var year = p.year || '????';
                     if (p.bibcode) {
                         var url = 'https://ui.adsabs.harvard.edu/abs/' + p.bibcode;
-                        var firstAuthor = p.first_author || p.authors || 'Unknown';
-                        var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
-                        var year = p.year || '????';
                         return '<a href="' + url + '" target="_blank">' + authorShort + ' et al. ' + year + '</a>';
                     } else {
-                        var firstAuthor = p.first_author || p.authors || 'Unknown';
-                        var authorShort = firstAuthor.replace(/\s*et\s+al\.?$/i, '').trim();
                         return authorShort + ' et al. ' + (p.year || '????');
                     }
                 }
@@ -1474,21 +2721,38 @@
         }
 
         // ===== 显示结果 =====
-        function displayResults(data) {
-            currentPapers = data.papers || [];
-            currentOverview = data.overview || '';
+        // 规范化标题用于模糊匹配：忽略大小写、标点、连字符与空白差异
+        function normTitle(t) {
+            return String(t || '').toLowerCase()
+                .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, ' ')  // 标点/符号 → 空格
+                .replace(/[\s-]+/g, ' ')                     // 空白与连字符统一为单空格
+                .trim();
+        }
 
-            var titleToIndex = {};
-            currentPapers.forEach(function(p, idx) {
-                var title = p.title.trim();
-                titleToIndex[title] = idx;
-            });
+        // 标题词级相似度：共同词数 / 较短标题的词数，范围 0~1
+        function titleSimilarity(a, b) {
+            var ta = normTitle(a).split(' ').filter(function(w) { return w.length > 0; });
+            var tb = normTitle(b).split(' ').filter(function(w) { return w.length > 0; });
+            if (!ta.length || !tb.length) return 0;
+            var set = {};
+            var inter = 0;
+            ta.forEach(function(w) { set[w] = true; });
+            tb.forEach(function(w) { if (set[w]) inter++; });
+            return inter / Math.min(ta.length, tb.length);
+        }
+
+        function displayResults(data) {
+            connectCache = {};   // 搜索结果或内容更新后，旧的跨领域连接报告作废（点击「更新」后再点连接按钮才会重新生成）
+            lastSearchData = data;   // 记录最近一次渲染的数据（语言切换时重渲染用）
+            currentPapers = data.papers || [];
 
             var overviewText = data.overview || '';
             var rawParagraphs = overviewText.split(/\n\s*\n/).filter(function(p) { return p.trim().length > 0; });
+            // 纯小标题段落与其后正文合并
+            currentParagraphs = mergeParagraphs(rawParagraphs);
             // 去重：使用前100个字符作为指纹（去除首尾空白）
             var seen = new Set();
-            rawParagraphs = rawParagraphs.filter(function(para) {
+            currentParagraphs = currentParagraphs.filter(function(para) {
                 var fingerprint = para.trim().substring(0, 100);
                 if (seen.has(fingerprint)) return false;
                 seen.add(fingerprint);
@@ -1496,29 +2760,54 @@
             });
 
             var html = '<div class="overview-section">';
-            rawParagraphs.forEach(function(para, idx) {
-                var trimmed = para.trim();
-                var title = '';
-                var content = trimmed;
-                var titleMatch = trimmed.match(/^\*\*(.*?)\*\*/);
-                if (titleMatch) {
-                    title = titleMatch[1];
-                    content = trimmed.replace(/^\*\*.*?\*\*/, '').trim();
-                } else {
-                    var firstWords = trimmed.split(' ').slice(0, 4).join(' ');
-                    title = firstWords || '段落';
-                }
+            currentParagraphs.forEach(function(para, idx) {
+                var parsed = parseParagraph(para.trim());
+                var title = parsed.title;
+                var content = parsed.content;
                 var hasRefs = /论文\d+/.test(content);
-                var contentWithLinks = replacePaperRefs(content, currentPapers);
-                var contentHtml = contentWithLinks.replace(/\n/g, ' ');
+                // 「关键困难」板块：检测中英文标题，用于挂载跨领域连接按钮
+                var isDifficulty = /当前关键困难与待解问题|Current Key Difficulties/.test(para);
+                // 「关键困难」板块：把项目符号（- 或 •）逐条转换为数字编号（1.、2.、...）
+                if (isDifficulty) {
+                    var lines = content.split('\n');
+                    var newLines = [];
+                    var bulletIndex = 1;
+                    for (var i = 0; i < lines.length; i++) {
+                        var trimmed = lines[i].trim();
+                        if (/^[-•]\s+/.test(trimmed)) {
+                            newLines.push(bulletIndex + '. ' + trimmed.replace(/^[-•]\s+/, ''));
+                            bulletIndex++;
+                        } else if (trimmed) {
+                            newLines.push(lines[i]);
+                        }
+                    }
+                    content = newLines.join('\n');
+                }
+                // 使用修改后的 content 生成带链接与数学渲染的正文
+                var contentWithLinks = replacePaperRefs(mathify(content), currentPapers);
+                // 非困难板块：项目符号（- 或 •）转为独立行展示；首条 bullet 在段落开头也要补上 • 标记
+                if (!isDifficulty) {
+                    contentWithLinks = contentWithLinks
+                        .replace(/^\s*[-•]\s+/, '<br>• ')
+                        .replace(/\n\s*[-•]\s*/g, '\n<br>• ');
+                }
+                // 困难板块：编号条目按行换行展示；其它板块按原有逻辑合并空白
+                var contentHtml = isDifficulty
+                    ? contentWithLinks.replace(/\n/g, '<br>')
+                    : contentWithLinks.replace(/\n/g, ' ');
                 var finalContent = contentHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
                 html += '<div class="overview-card" data-paragraph-index="' + idx + '">';
-                html += '<div class="title">' + title + '</div>';
+                if (title) {
+                    html += '<div class="title">' + title + '</div>';
+                }
                 html += '<div class="content">' + finalContent + '</div>';
                 html += '<div class="actions">';
                 if (hasRefs) {
-                    html += '<button class="expand-btn" data-paragraph-index="' + idx + '">📖 查看详情</button>';
+                    html += '<button class="expand-btn" data-paragraph-index="' + idx + '">' + iconHtml('detail') + ' ' + t('detail.btn') + '</button>';
+                }
+                if (isDifficulty) {
+                    html += '<button class="connect-btn" data-paragraph-index="' + idx + '" title="' + t('connect.title') + '">' + iconHtml('connect') + ' ' + t('connect.btn') + '</button>';
                 }
                 html += '</div></div>';
             });
@@ -1526,54 +2815,68 @@
 
             if (data.categories && data.categories.length > 0) {
                 data.categories.forEach(function(cat, idx) {
+                    // 兜底：papers_with_links 为空时回退到 AI 返回的论文标题列表再匹配一次，避免抽屉空白
+                    var catEntries = (cat.papers_with_links && cat.papers_with_links.length)
+                        ? cat.papers_with_links
+                        : (Array.isArray(cat.papers) ? cat.papers : []);
                     html += '<div class="category-card">';
                     html += '<div class="category-header" data-target="cat-' + idx + '">';
-                    html += '<span>📂 ' + cat.name + '（' + (cat.papers_with_links ? cat.papers_with_links.length : 0) +
-                        '篇）</span>';
+                    html += '<span>' + iconHtml('folder') + ' ' + cat.name + t('category.count', catEntries.length) + '</span>';
                     html += '<span class="arrow">▼</span>';
                     html += '</div>';
                     html += '<div class="category-body" id="cat-' + idx + '">';
-                    if (cat.papers_with_links) {
-                        cat.papers_with_links.forEach(function(p) {
-                            var bibcode = p.bibcode;
-                            var index = -1;
-                            if (bibcode) {
-                                for (var i = 0; i < currentPapers.length; i++) {
-                                    if (currentPapers[i].bibcode === bibcode) {
-                                        index = i;
-                                        break;
-                                    }
+                    catEntries.forEach(function(p) {
+                        var isStr = (typeof p === 'string');
+                        var ptitle = isStr ? p : (p.title || '');
+                        var pBibcode = isStr ? null : p.bibcode;
+                        var index = -1;
+                        if (pBibcode) {
+                            for (var i = 0; i < currentPapers.length; i++) {
+                                if (currentPapers[i].bibcode === pBibcode) {
+                                    index = i;
+                                    break;
                                 }
                             }
-                            if (index === -1) {
-                                var title = p.title.trim();
-                                index = currentPapers.findIndex(function(paper) { return paper.title.trim() ===
-                                    title; });
-                            }
-                            var paperNum = (index !== -1) ? (index + 1) : '?';
-                            var label = '论文' + paperNum + ': ';
+                        }
+                        if (index === -1) {
+                            // 标题模糊匹配：忽略大小写、标点与空白差异
+                            var norm = normTitle(ptitle);
+                            index = currentPapers.findIndex(function(paper) {
+                                return normTitle(paper.title) === norm;
+                            });
+                        }
+                        if (index === -1) {
+                            // 词级相似度兜底：AI 转写标题略有出入时仍能匹配
+                            index = currentPapers.findIndex(function(paper) {
+                                return titleSimilarity(paper.title, ptitle) >= 0.7;
+                            });
+                        }
+                        var matchedPaper = (index !== -1) ? currentPapers[index] : null;
+                        // 分类数据缺 bibcode 时，用匹配到的论文信息补上
+                        var realBibcode = pBibcode || (matchedPaper ? matchedPaper.bibcode : null);
+                        var realAuthors = (isStr ? '' : p.authors) || (matchedPaper ? matchedPaper.authors : '');
+                        var realYear = (isStr ? '' : p.year) || (matchedPaper ? matchedPaper.year : '');
+                        // 解析不出链接的条目直接不展示，保证抽屉里列出的论文都有链接
+                        if (!realBibcode) return;
 
-                            if (p.bibcode) {
-                                var url = 'https://ui.adsabs.harvard.edu/abs/' + p.bibcode;
-                                html += '<a class="paper-link" href="' + url + '" target="_blank">';
-                                html += '<span style="color:#6A8CFF;font-weight:600;">' + label + '</span>' + p.title;
-                                html += '<span class="meta">' + (p.authors || '') + ' · ' + (p.year || '') +
-                                '</span>';
-                                html += '</a>';
-                            } else {
-                                html += '<div class="paper-link no-link">';
-                                html += '<span style="color:#6A8CFF;font-weight:600;">' + label + '</span>' + p.title;
-                                html += ' <span class="meta">（无链接）</span></div>';
-                            }
+                        var url = 'https://ui.adsabs.harvard.edu/abs/' + realBibcode;
+                        html += '<a class="paper-link" href="' + url + '" target="_blank">';
+                        html += ptitle;
+                        html += '<span class="meta">' + (realAuthors || '') + ' · ' + (realYear || '') +
+                            '</span>';
+                            html += '</a>';
                         });
-                    }
                     html += '</div></div>';
                 });
             } else {
-                html += '<p style="color:rgba(255,255,255,0.30);text-align:center;padding:1rem 0;">暂无分类数据</p>';
+                html += '<p style="color:rgba(255,255,255,0.30);text-align:center;padding:1rem 0;">' + t('category.empty') + '</p>';
             }
 
             resultsDiv.innerHTML = html;
+
+            // 有内容时取消垂直居中（贴顶），避免抽屉收回后主卡片底部与网页下沿出现空隙
+            var hasContent = !!(data.overview || (data.categories && data.categories.length));
+            document.body.classList.toggle('content-empty', !hasContent);
 
             document.querySelectorAll('.category-header').forEach(function(header) {
                 header.addEventListener('click', function(e) {
@@ -1591,13 +2894,11 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     var idx = parseInt(this.dataset.paragraphIndex);
-                    var rawParagraphs = currentOverview.split(/\n\s*\n/).filter(function(p) { return p.trim()
-                            .length > 0; });
-                    if (idx >= rawParagraphs.length) return;
-                    var paraText = rawParagraphs[idx];
+                    if (idx >= currentParagraphs.length) return;
+                    var paraText = currentParagraphs[idx];
                     var refs = paraText.match(/论文(\d+)/g);
                     if (!refs) {
-                        alert('该段落未引用具体论文。');
+                        alert(t('detail.noRefs'));
                         return;
                     }
                     var indices = refs.map(function(ref) { return parseInt(ref.replace('论文', '')) - 1; });
@@ -1605,18 +2906,108 @@
                         return p;
                     });
                     if (selected.length === 0) {
-                        alert('未找到匹配的论文。');
+                        alert(t('detail.noMatch'));
                         return;
                     }
-                    var title = '';
-                    var titleMatch = paraText.match(/^\*\*(.*?)\*\*/);
-                    if (titleMatch) title = titleMatch[1];
-                    else {
-                        var allTitles = document.querySelectorAll('.overview-card .title');
-                        if (allTitles[idx]) title = allTitles[idx].innerText;
-                        else title = '详情';
-                    }
+                    var parsed = parseParagraph(paraText.trim());
+                    var title = parsed.title || t('detail.title');
                     openSidePanel(title, selected, idx, this);
+                });
+            });
+
+            // 跨领域连接按钮：打开右侧面板展示「他山之石」分析
+            // 把「当前关键困难与待解问题」段落拆成独立条目（- / • / 1. 开头），逐条独立分析
+            function extractDifficultyBullets(context) {
+                var items = [];
+                String(context || '').split(/\n/).forEach(function(line) {
+                    var l = line.trim();
+                    if (!l) return;
+                    if (/^[*\-•]\s+/.test(l)) {
+                        items.push(l.replace(/^[*\-•]\s+/, '').trim());
+                    } else if (/^\d+[.、)）]\s*/.test(l)) {
+                        items.push(l.replace(/^\d+[.、)）]\s*/, '').trim());
+                    }
+                });
+                return items;
+            }
+            document.querySelectorAll('.connect-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var idx = parseInt(this.dataset.paragraphIndex);
+                    if (idx >= currentParagraphs.length) return;
+                    var btnEl = this;
+                    // 与「查看详情」一致的交互：按钮亮起（其余高亮清除）
+                    document.querySelectorAll('.connect-btn').forEach(function(b) { b.classList.remove('active'); });
+                    document.querySelectorAll('.expand-btn').forEach(function(b) { b.classList.remove('active'); });
+                    btnEl.classList.add('active');
+
+                    // 该段落已有连接报告 → 只做打开/关闭切换，不重新生成（重新生成需先点「更新」）
+                    var cached = connectCache[idx];
+                    if (cached && cached.keyword === currentKeyword) {
+                        if (panelType === 'connect' && currentConnectIdx === idx && sidePanel.classList.contains('open')) {
+                            closeSidePanel();
+                        } else {
+                            openConnectPanel(cached.report, t('connect.title'), cached.pool, idx);
+                        }
+                        return;
+                    }
+                    var context = currentParagraphs[idx];
+                    var keyword = currentKeyword || keywordInput.value.trim();
+                    if (!keyword) {
+                        alert(t('connect.noSearch'));
+                        return;
+                    }
+                    if (!getLocal('deepseekKey')) {
+                        alert(t('connect.noKey'));
+                        return;
+                    }
+                    // 生成中：只重新打开加载面板（不重复请求），生成完成后会自动更新内容
+                    openConnectLoading(idx);
+                    if (connectBusyIdx === idx) return;
+
+                    // 逐条独立分析：拆出所有 bullet 条目（≥2 条时按条分析，否则整段兜底）
+                    var problems = extractDifficultyBullets(context);
+                    if (problems.length < 2) problems = null;
+                    connectBusyIdx = idx;
+
+                    var headers = {
+                        'Content-Type': 'application/json',
+                        'X-DeepSeek-Key': getLocal('deepseekKey') || ''
+                    };
+                    fetch('/connect', {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify({ topic: keyword, context: context, problems: problems, lang: lang })
+                        })
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data.error) {
+                                if (panelType === 'connect' && currentConnectIdx === idx) {
+                                    panelContent.innerHTML = '<div style="color:#FF6B6B;">' + t('status.error', data.error) + '</div>';
+                                }
+                            } else {
+                                connectCache[idx] = {
+                                    report: data.connection_report,
+                                    pool: { count: data.pool_count, fields: data.pool_fields },
+                                    keyword: currentKeyword
+                                };
+                                // 仅当用户当前正看着该段落的连接面板时才更新内容；已切到详情则只缓存，不打断
+                                if (panelType === 'connect' && currentConnectIdx === idx && sidePanel.classList.contains('open')) {
+                                    openConnectPanel(data.connection_report, t('connect.title'), {
+                                        count: data.pool_count,
+                                        fields: data.pool_fields
+                                    }, idx);
+                                }
+                            }
+                        })
+                        .catch(function(err) {
+                            if (panelType === 'connect' && currentConnectIdx === idx) {
+                                panelContent.innerHTML = '<div style="color:#FF6B6B;">' + t('status.error', err.message) + '</div>';
+                            }
+                        })
+                        .finally(function() {
+                            if (connectBusyIdx === idx) connectBusyIdx = null;
+                        });
                 });
             });
 
@@ -1635,7 +3026,7 @@
             if (forceUpdate === undefined) forceUpdate = false;
             keyword = keyword.trim();
             if (!keyword) {
-                setStatus('⚠️ 请输入关键词', 'error');
+                sayStatus('status.noKeyword', [], 'error');
                 return;
             }
 
@@ -1645,12 +3036,12 @@
                 currentController.abort();
                 currentController = null;
                 isSearching = false;
-                updateBtn.textContent = '🔄 更新';
+                updateBtn.innerHTML = iconHtml('refresh') + ' ' + t('update.btn');
                 updateBtn.classList.remove('stop');
             }
 
             if (forceUpdate) {
-                removeLocal('searchResult_' + keyword);
+                removeLocal('searchResult_v2_' + lang + '_' + keyword);
                 var keysToRemove = [];
                 for (var i = 0; i < localStorage.length; i++) {
                     var key = localStorage.key(i);
@@ -1671,11 +3062,12 @@
                 var data = searchCache[keyword];
                 keywordInput.value = keyword;
                 currentKeyword = keyword;
+                contentLang = lang;
                 displayResults(data);
-                var totalPapers = data.categories.reduce(function(acc, c) {
+                var totalPapers = (data.categories || []).reduce(function(acc, c) {
                     return acc + (c.papers_with_links ? c.papers_with_links.length : 0);
                 }, 0);
-                setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                sayStatus('status.doneCache', [totalPapers], 'success');
                 if (pushHistory) {
                     var newUrl = '?q=' + encodeURIComponent(keyword);
                     history.pushState({ keyword: keyword }, '', newUrl);
@@ -1684,16 +3076,17 @@
             }
 
             if (!forceUpdate) {
-                var cachedData = getLocal('searchResult_' + keyword);
+                var cachedData = getLocal('searchResult_v2_' + lang + '_' + keyword);
                 if (cachedData) {
                     searchCache[keyword] = cachedData;
                     keywordInput.value = keyword;
                     currentKeyword = keyword;
+                    contentLang = lang;
                     displayResults(cachedData);
-                    var totalPapers = cachedData.categories.reduce(function(acc, c) {
+                    var totalPapers = (cachedData.categories || []).reduce(function(acc, c) {
                         return acc + (c.papers_with_links ? c.papers_with_links.length : 0);
                     }, 0);
-                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自本地缓存）', 'success');
+                    sayStatus('status.doneLocal', [totalPapers], 'success');
                     if (pushHistory) {
                         var newUrl = '?q=' + encodeURIComponent(keyword);
                         history.pushState({ keyword: keyword }, '', newUrl);
@@ -1706,19 +3099,20 @@
             var adsToken = getLocal('adsToken');
             var deepseekKey = getLocal('deepseekKey');
             if (!adsToken || !deepseekKey) {
-                setStatus('⚠️ 请先在 ⚙️ API 设置 中填写 ADS Token 和 DeepSeek API Key', 'error');
+                sayStatus('status.noKeys', [], 'error');
                 return;
             }
 
             keywordInput.value = keyword;
             searchBtn.disabled = true;
             isSearching = true;
-            updateBtn.textContent = '⏹ 停止';
+            updateBtn.innerHTML = iconHtml('stop') + ' ' + t('stop.btn');
             updateBtn.classList.add('stop');
             updateBtn.disabled = false;
 
-            setStatus('🔄 正在搜索 “' + keyword + '” 并生成综述...', '');
+            sayStatus('status.searching', [keyword], 'loading');
             resultsDiv.innerHTML = '';
+            resultsDiv.classList.add('is-loading');
 
             currentController = new AbortController();
             var signal = currentController.signal;
@@ -1732,7 +3126,7 @@
             fetch('/search', {
                     method: 'POST',
                     headers: headers,
-                    body: new URLSearchParams({ keyword: keyword }),
+                    body: new URLSearchParams({ keyword: keyword, lang: lang }),
                     signal: signal
                 })
                 .then(function(response) {
@@ -1745,13 +3139,13 @@
                 })
                 .then(function(data) {
                     searchCache[keyword] = data;
-                    setLocal('searchResult_' + keyword, data);
+                    setLocal('searchResult_v2_' + lang + '_' + keyword, data);
                     currentKeyword = keyword;
+                    contentLang = lang;
                     currentPapers = data.papers || [];
-                    currentOverview = data.overview || '';
                     displayResults(data);
                     var totalPapers = data.papers ? data.papers.length : 0;
-                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文', 'success');
+                    sayStatus('status.done', [totalPapers], 'success');
                     if (pushHistory) {
                         var newUrl = '?q=' + encodeURIComponent(keyword);
                         history.pushState({ keyword: keyword }, '', newUrl);
@@ -1759,37 +3153,46 @@
                 })
                 .catch(function(err) {
                     if (err.name === 'AbortError') {
-                        setStatus('⏹ 搜索已取消', '');
+                        sayStatus('status.cancelled', [], '');
                     } else {
                         // 根据错误信息给出友好提示
                         var msg = err.message || '未知错误';
                         if (msg.includes('ADS Token') || msg.includes('未提供 ADS Token')) {
-                            setStatus('⚠️ ADS Token 无效，请检查 ⚙️ API 设置 中的 Token', 'error');
+                            sayStatus('status.badToken', [], 'error');
                         } else if (msg.includes('DeepSeek') || msg.includes('未提供 DeepSeek')) {
-                            setStatus('⚠️ DeepSeek API Key 无效，请检查 ⚙️ API 设置 中的 Key', 'error');
+                            sayStatus('status.badKey', [], 'error');
                         } else if (msg.includes('未找到相关论文')) {
-                            setStatus('📭 未找到与 “' + keyword + '” 相关的论文，请尝试其他关键词', 'error');
+                            sayStatus('status.noPapers', [keyword], 'error');
+                        } else if (msg.indexOf('RemoteDisconnected') !== -1 || msg.indexOf('Connection aborted') !== -1 || msg.indexOf('连接中断') !== -1) {
+                            sayStatus('status.error', [t('net.retry')], 'error');
                         } else {
-                            setStatus('❌ ' + msg, 'error');
+                            sayStatus('status.error', [msg], 'error');
                         }
                     }
                 })
                 .finally(function() {
                     searchBtn.disabled = false;
                     isSearching = false;
-                    updateBtn.textContent = '🔄 更新';
+                    updateBtn.innerHTML = iconHtml('refresh') + ' ' + t('update.btn');
                     updateBtn.classList.remove('stop');
                     currentController = null;
+                    resultsDiv.classList.remove('is-loading');
                 });
         }
 
         // ===== 状态信息辅助函数 =====
         function setStatus(text, type) {
-            statusDiv.textContent = text;
+            statusDiv.innerHTML = text;
             statusDiv.className = 'status';
             if (type) {
                 statusDiv.classList.add(type);
             }
+        }
+
+        // 记录状态来源（key+args），语言切换后可按当前语言重译（带 SVG 图标）
+        function sayStatus(key, args, type) {
+            lastStatus = { key: key, args: args || [], type: type || '' };
+            setStatus(statusHtml(key, t.apply(null, [key].concat(args || []))), type || '');
         }
 
         // ===== 更新按钮 =====
@@ -1800,13 +3203,13 @@
                     currentController = null;
                 }
                 isSearching = false;
-                updateBtn.textContent = '🔄 更新';
+                updateBtn.innerHTML = iconHtml('refresh') + ' ' + t('update.btn');
                 updateBtn.classList.remove('stop');
-                setStatus('⏹ 正在停止...', '');
+                sayStatus('status.stopping', [], '');
             } else {
                 var kw = keywordInput.value.trim() || currentKeyword;
                 if (!kw) {
-                    alert('请先输入或搜索一个关键词。');
+                    alert(t('kw.emptyAlert'));
                     return;
                 }
                 performSearch(kw, true, true);
@@ -1815,6 +3218,8 @@
 
         // ===== 初始化 =====
         function init() {
+            applyI18n();
+
             renderKeywords();
             document.getElementById('addKeywordBtn').addEventListener('click', addKeyword);
             updateBtn.addEventListener('click', handleUpdateClick);
@@ -1834,6 +3239,15 @@
                 var panel = document.getElementById('settingsPanel');
                 panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
             });
+            // 点击面板外部区域自动关闭 API 设置（无需再点设置按钮）
+            document.addEventListener('click', function(e) {
+                var panel = document.getElementById('settingsPanel');
+                var toggle = document.getElementById('settingsToggle');
+                if (panel.style.display !== 'none' && !panel.contains(e.target) && !toggle.contains(e.target)) {
+                    panel.style.display = 'none';
+                }
+            });
+            document.getElementById('langBtn').addEventListener('click', toggleLang);
 
             // 引导
             initTutorial();
@@ -1844,16 +3258,16 @@
             if (q) {
                 keywordInput.value = q;
                 currentKeyword = q;
-                var cachedData = getLocal('searchResult_' + q);
+                var cachedData = getLocal('searchResult_v2_' + lang + '_' + q);
                 if (cachedData) {
                     searchCache[q] = cachedData;
                     currentPapers = cachedData.papers || [];
-                    currentOverview = cachedData.overview || '';
+                    contentLang = lang;
                     displayResults(cachedData);
                     var totalPapers = cachedData.papers ? cachedData.papers.length : 0;
-                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                    sayStatus('status.doneCache', [totalPapers], 'success');
                 } else {
-                    setStatus('📭 暂无缓存，点击 “🔄 更新” 按钮生成 “' + q + '” 的综述。', '');
+                    sayStatus('status.noCache', [q], '');
                     resultsDiv.innerHTML = '';
                 }
             }
@@ -1865,28 +3279,28 @@
                 var keyword = event.state.keyword;
                 keywordInput.value = keyword;
                 currentKeyword = keyword;
-                var cachedData = getLocal('searchResult_' + keyword);
+                var cachedData = getLocal('searchResult_v2_' + lang + '_' + keyword);
                 if (cachedData) {
                     searchCache[keyword] = cachedData;
                     currentPapers = cachedData.papers || [];
-                    currentOverview = cachedData.overview || '';
+                    contentLang = lang;
                     displayResults(cachedData);
                     var totalPapers = cachedData.papers ? cachedData.papers.length : 0;
-                    setStatus('✅ 综述已生成，共 ' + totalPapers + ' 篇论文（来自缓存）', 'success');
+                    sayStatus('status.doneCache', [totalPapers], 'success');
                 } else {
-                    setStatus('📭 暂无缓存，点击 “🔄 更新” 按钮生成综述。', '');
+                    sayStatus('status.noCache2', [], '');
                     resultsDiv.innerHTML = '';
                     currentPapers = [];
-                    currentOverview = '';
                 }
                 closeSidePanel();
             } else {
                 resultsDiv.innerHTML = '';
-                setStatus('✦ 输入关键词或点击常用搜索开始探索', '');
+                sayStatus('status.initial', [], '');
                 keywordInput.value = '';
                 currentPapers = [];
-                currentOverview = [];
                 currentKeyword = '';
+                lastSearchData = null;
+                contentLang = '';
                 closeSidePanel();
             }
         });
