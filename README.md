@@ -21,16 +21,39 @@
 - **可视化**：NetworkX + Pyvis（知识图谱）
 
 ## 📁 项目结构
-
 ```
 .
-├── app.py                  # Flask 后端主程序
+├── app.py                  # 入口：创建 Flask app、注册蓝图、错误兜底（保留测试兼容导出）
+├── config.py               # 全局常量（API 地址、模型、缓存上限）
+├── cache.py                # 搜索结果 LRU 缓存（供 /graph 复用）
+├── utils.py                # 文本工具：标题匹配 + 数学符号转写
+├── scix.py                 # SciX / ADS 论文检索
+├── deepseek.py             # DeepSeek 客户端（调用 / JSON 解析 / 修复）
+├── prompts.py              # 全部提示词构建
+├── services.py             # AI 业务编排（综述生成 / 跨领域连接流水线）
+├── graph.py                # 知识图谱页面构建
+├── routes.py               # Flask 蓝图：全部路由
 ├── templates/
-│   └── index.html          # 前端页面（单页应用）
-├── static/                 # 静态资源（图标、logo 等）
-│   ├── galaxy-2-solid.svg
-│   ├── ads_logo.svg
-│   └── deepseek-color.svg
+│   └── index.html          # 前端页面（单页应用，样式与脚本均已外置）
+├── static/
+│   ├── css/
+│   │   └── index.css       # 全站样式
+│   ├── js/                 # 前端脚本（按功能模块拆分，按序加载）
+│   │   ├── core.js         # DOM 引用、存储、图标、i18n、数学渲染
+│   │   ├── state.js        # 共享状态
+│   │   ├── parse.js        # 段落/标题解析
+│   │   ├── keywords.js     # 常用搜索词管理
+│   │   ├── settings.js     # API 设置面板
+│   │   ├── tutorial.js     # 引导系统
+│   │   ├── lang.js         # 中英切换 / 翻译
+│   │   ├── detail.js       # 右侧详情面板
+│   │   ├── connect.js      # 跨领域连接面板
+│   │   ├── results.js      # 主卡片渲染
+│   │   ├── search.js       # 搜索流程
+│   │   └── main.js         # 初始化 / 入口（最后加载）
+│   └── *.svg               # 图标与 logo（galaxy、ADS、DeepSeek 等）
+├── test_backend.py         # 后端测试（python3 test_backend.py）
+├── test_parsing.js         # 前端解析测试（node test_parsing.js）
 ├── requirements.txt        # Python 依赖
 └── README.md
 ```
@@ -71,10 +94,11 @@ python app.py
 
 默认运行在 `http://0.0.0.0:5000`。访问该地址即可使用。
 
-> 生产环境建议使用 `waitress` 或 `gunicorn`：
+> 生产环境建议使用 `waitress` 或 `gunicorn`（`app:app` 指向入口模块 `app.py` 中的 Flask 实例）：
 > ```bash
 > pip install waitress
 > waitress-serve --host 0.0.0.0 --port 5000 app:app
+> # 或 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 > ```
 
 ### 6. 使用
@@ -96,16 +120,20 @@ python app.py
 | `FLASK_DEBUG` | 是否开启调试模式（`1` 开启） | `0` |
 
 例如：
+
 ```bash
-export DEEPSEEK_MODEL=deepseek-reasoner
+export DEEPSEEK_MODEL=deepseek-chat   # 官方 API 通用模型（默认）
 python app.py
 ```
+
+> 模型名说明：官方 API 的通用模型为 `deepseek-chat`；`deepseek-reasoner` 为慢速推理模型，不建议用于本工具；`deepseek-v4-flash` 等其它模型名仅在 `DEEPSEEK_URL` 指向支持它们的网关时才会生效。
 
 ## 📝 依赖说明
 
 - `Flask`：Web 框架
 - `requests`：调用 SciX 和 DeepSeek API
 - `networkx` + `pyvis`：生成知识图谱交互页面 (尚未启用)
+- `waitress`：生产环境 WSGI 服务器
 
 （Python 标准库 `re`, `json`, `os`, `datetime`, `unicodedata`, `concurrent.futures` 无需额外安装）
 
