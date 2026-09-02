@@ -52,8 +52,6 @@
 │   │   ├── search.js       # 搜索流程
 │   │   └── main.js         # 初始化 / 入口（最后加载）
 │   └── *.svg               # 图标与 logo（galaxy、ADS、DeepSeek 等）
-├── test_backend.py         # 后端测试（python3 test_backend.py）
-├── test_parsing.js         # 前端解析测试（node test_parsing.js）
 ├── requirements.txt        # Python 依赖
 └── README.md
 ```
