@@ -38,7 +38,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+    <style>
+        /* 设置面板：密钥行布局（“已保存”徽标紧贴题目文字，不溢出卡片） */
+        .key-row-head { display: flex; align-items: center; justify-content: flex-start; gap: 0.6rem; flex: 1 1 100%; min-width: 0; }
+        .key-row-head label { flex: 0 0 auto; width: auto; }   /* 覆盖 index.css 中 label 独占一行的规则 */
+        .key-row-head .key-saved { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; font-weight: 600; color: #7BCB7B; white-space: nowrap; }
+        .key-row-head .key-saved svg { width: 0.95em; height: 0.95em; }
+        .key-input-row { display: flex; align-items: center; gap: 0.4rem; flex: 1 1 100%; width: 100%; min-width: 0; }
+        .key-input-row input { flex: 1 1 auto; min-width: 0; }
+        .key-toggle {
+            flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 2.2rem; height: 2.2rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s, border-color 0.2s, background 0.2s;
+        }
+        .key-toggle:hover { color: #8AACFF; border-color: #6A8CFF; background: rgba(106,140,255,0.1); }
+        .key-toggle svg { width: 1.05rem; height: 1.05rem; }
+        .settings-actions { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.2rem; }
+        #clearKeysBtn {
+            padding: 0.55rem 1.1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 80, 80, 0.35);
+            background: rgba(255, 80, 80, 0.08);
+            color: #FF8A8A;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+        }
+        #clearKeysBtn:hover {
+            background: rgba(255, 80, 80, 0.2);
+            color: #FFFFFF;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 14px rgba(255, 80, 80, 0.45);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body class="content-empty">
     <div class="container" id="mainContainer">
@@ -64,16 +106,31 @@
             </div>
             <div class="settings-panel" id="settingsPanel" style="display:none;">
                 <div class="settings-row">
-                    <label for="adsToken">ADS Token</label>
-                    <input type="text" id="adsToken" placeholder="输入你的 ADS 令牌" />
+                    <div class="key-row-head">
+                        <label for="adsToken">ADS Token</label>
+                        <span class="key-saved" id="adsSaved" style="display:none;"></span>
+                    </div>
+                    <div class="key-input-row">
+                        <input type="password" id="adsToken" placeholder="输入你的 ADS 令牌" autocomplete="off" />
+                        <button type="button" class="key-toggle" id="adsToggleBtn" title="显示/隐藏"></button>
+                    </div>
                     <span class="hint" data-i18n-html="settings.hintFromAds">从 <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ADS</a> 获取</span>
                 </div>
                 <div class="settings-row">
-                    <label for="deepseekKey">DeepSeek API Key</label>
-                    <input type="password" id="deepseekKey" placeholder="输入你的 DeepSeek API Key" />
+                    <div class="key-row-head">
+                        <label for="deepseekKey">DeepSeek API Key</label>
+                        <span class="key-saved" id="deepseekSaved" style="display:none;"></span>
+                    </div>
+                    <div class="key-input-row">
+                        <input type="password" id="deepseekKey" placeholder="输入你的 DeepSeek API Key" autocomplete="off" />
+                        <button type="button" class="key-toggle" id="deepseekToggleBtn" title="显示/隐藏"></button>
+                    </div>
                     <span class="hint" data-i18n-html="settings.hintFromDs">从 <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek</a> 获取</span>
                 </div>
-                <button id="saveSettingsBtn" data-i18n="settings.save" disabled>保存设置</button>
+                <div class="settings-actions">
+                    <button id="saveSettingsBtn" data-i18n="settings.save" disabled>保存设置</button>
+                    <button type="button" id="clearKeysBtn">清除密钥</button>
+                </div>
                 <div class="settings-extra">
                     <button id="clearCacheBtn" data-i18n-html="settings.clear">清除搜索缓存（保留密钥）</button>
                     <button id="resetTutorialBtn" data-i18n="settings.resetTutorial">重置引导</button>
